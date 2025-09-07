@@ -4,6 +4,7 @@ import User from "./images/User.png";
 
 // Homepage
 import Ladyjustice from "./images/Home/lady-justice.png"
+import HeroBg from "./images/Home/HeroBg.png"
 
 import SimplifiedLearning from "./images/Home/What We Offer/SimplifiedLearning.png"
 import AskChatbot from "./images/Home/What We Offer/AskChatbot.png"
@@ -16,6 +17,14 @@ import EngagingExperience from "./images/Home/Why learn/EngagingExperience.png"
 import InstantGuidance from "./images/Home/Why learn/InstantGuidance.png"
 import SmarterProgress from "./images/Home/Why learn/SmarterProgress.png"
 
+
+//Learn Page
+import HeroLearn from "./images/Learn/HeroLearn.png"
+
+import LegislativeImg from "./images/Learn/LegislativeImg.png"
+import JudiciaryImg from "./images/Learn/JudiciaryImg.png"
+import ExecutiveImg from "./images/Learn/ExecutiveImg.png"
+
 // // Icons
 // import ClarityIcon from "./images/icons/clarity.png";
 // import EngagingIcon from "./images/icons/engaging.png";
@@ -26,6 +35,7 @@ export {
   User,
   Logo,
   Ladyjustice,
+  HeroBg,
   SimplifiedLearning,
   AskChatbot,
   CourtroomSimulation,
@@ -34,11 +44,9 @@ export {
   Clarity,
   EngagingExperience,
   InstantGuidance,
-  SmarterProgress
-//   HeroBg,
-//   CourtroomImg,
-//   ClarityIcon,
-//   EngagingIcon,
-//   GuidanceIcon,
-//   ProgressIcon,
+  SmarterProgress,
+  HeroLearn,
+  LegislativeImg,
+  JudiciaryImg,
+  ExecutiveImg
 };

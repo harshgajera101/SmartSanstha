@@ -1,5 +1,17 @@
 import FAQ from "../components/FAQ";
-import { Ladyjustice, SimplifiedLearning, AskChatbot, CourtroomSimulation, GamifiedApproach, PerformanceTracking, Clarity, EngagingExperience, SmarterProgress, InstantGuidance } from "@/assets";
+import {
+  Ladyjustice,
+  HeroBg,
+  SimplifiedLearning,
+  AskChatbot,
+  CourtroomSimulation,
+  GamifiedApproach,
+  PerformanceTracking,
+  Clarity,
+  EngagingExperience,
+  SmarterProgress,
+  InstantGuidance,
+} from "@/assets";
 
 export default function Home() {
   return (
@@ -7,12 +19,13 @@ export default function Home() {
       {/* Hero Section */}
       <section
         className="relative text-center text-white bg-cover bg-center h-[70vh]"
-        style={{ backgroundImage: "url('/india-flag-bg.jpg')" }}
+        style={{ backgroundImage: `url(${HeroBg})` }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 flex flex-col justify-center items-center h-full">
-          <h2 className="text-2xl font-semibold">Welcome To</h2>
+          <h1 className="text-4xl md:text-5xl font-bold">Welcome To</h1>
           <h1 className="text-4xl md:text-5xl font-bold mt-2">SmartSanstha</h1>
+          {/* <img src="" alt="" /> */}
           <p className="text-lg md:text-xl mt-2">
             AI-Powered Gamified Constitutional Literacy Platform
           </p>
@@ -37,7 +50,8 @@ export default function Home() {
             The platform not only helps users explore the Legislature,
             Executive, and Judiciary but also provides multilingual support and
             AI-driven insights to make learning engaging, inclusive, and
-            impactful.
+            impactful. With SmartSanstha, constitutional literacy becomes
+            accessible, fun, and relevant to daily life.
           </p>
         </div>
         <div className="flex justify-center">
@@ -55,7 +69,11 @@ export default function Home() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           {/* Card 1 */}
           <div className="text-center">
-            <img src={SimplifiedLearning} alt="Simplified Learning" className="rounded-lg mb-4" />
+            <img
+              src={SimplifiedLearning}
+              alt="Simplified Learning"
+              className="rounded-lg mb-4"
+            />
             <h3 className="font-bold text-lg">Simplified Learning</h3>
             <p className="text-gray-300 mt-2 text-sm">
               Complex constitutional articles are translated into clear,
@@ -64,7 +82,11 @@ export default function Home() {
           </div>
           {/* Card 2 */}
           <div className="text-center">
-            <img src={CourtroomSimulation} alt="Courtroom Simulation" className="rounded-lg mb-4" />
+            <img
+              src={CourtroomSimulation}
+              alt="Courtroom Simulation"
+              className="rounded-lg mb-4"
+            />
             <h3 className="font-bold text-lg">Courtroom Simulation</h3>
             <p className="text-gray-300 mt-2 text-sm">
               Watch real-life inspired cases unfold step by step and observe
@@ -73,7 +95,11 @@ export default function Home() {
           </div>
           {/* Card 3 */}
           <div className="text-center">
-            <img src={GamifiedApproach} alt="Gamified Approach" className="rounded-lg mb-4" />
+            <img
+              src={GamifiedApproach}
+              alt="Gamified Approach"
+              className="rounded-lg mb-4"
+            />
             <h3 className="font-bold text-lg">Gamified Approach</h3>
             <p className="text-gray-300 mt-2 text-sm">
               Spin-the-wheel, quizzes, and scenario challenges make learning
@@ -82,7 +108,11 @@ export default function Home() {
           </div>
           {/* Card 4 */}
           <div className="text-center">
-            <img src={PerformanceTracking} alt="Performance Tracking" className="rounded-lg mb-4" />
+            <img
+              src={PerformanceTracking}
+              alt="Performance Tracking"
+              className="rounded-lg mb-4"
+            />
             <h3 className="font-bold text-lg">Performance Tracking</h3>
             <p className="text-gray-300 mt-2 text-sm">
               Track progress, review strengths, and get guided suggestions for
@@ -91,7 +121,11 @@ export default function Home() {
           </div>
           {/* Card 5 */}
           <div className="text-center md:col-span-2 lg:col-span-1">
-            <img src={AskChatbot} alt="Ask Chatbot" className="rounded-lg mb-4" />
+            <img
+              src={AskChatbot}
+              alt="Ask Chatbot"
+              className="rounded-lg mb-4"
+            />
             <h3 className="font-bold text-lg">Ask Chatbot</h3>
             <p className="text-gray-300 mt-2 text-sm">
               An AI chatbot answers questions, simplifies legal terms, and
@@ -112,24 +146,35 @@ export default function Home() {
             <p className="font-semibold">Clarity & Understanding</p>
           </div>
           <div>
-            <img src={EngagingExperience} alt="Engaging" className="mx-auto mb-4 h-42" />
+            <img
+              src={EngagingExperience}
+              alt="Engaging"
+              className="mx-auto mb-4 h-42"
+            />
             <p className="font-semibold">Engaging Experience</p>
           </div>
           <div>
-            <img src={InstantGuidance} alt="Guidance" className="mx-auto mb-4 h-42" />
+            <img
+              src={InstantGuidance}
+              alt="Guidance"
+              className="mx-auto mb-4 h-42"
+            />
             <p className="font-semibold">Instant Guidance</p>
           </div>
           <div>
-            <img src={SmarterProgress} alt="Progress" className="mx-auto mb-4 h-42" />
+            <img
+              src={SmarterProgress}
+              alt="Progress"
+              className="mx-auto mb-4 h-42"
+            />
             <p className="font-semibold">Smarter Progress</p>
           </div>
         </div>
       </section>
 
       <section>
-        <FAQ/>
+        <FAQ />
       </section>
-
     </div>
   );
 }
