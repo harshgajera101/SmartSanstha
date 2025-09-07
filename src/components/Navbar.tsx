@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
+import { Logo, User } from "@/assets";
 
 export default function Navbar() {
   return (
     <nav className="bg-[#0A2240] text-white px-6 py-4 flex items-center justify-between">
       {/* Left Logo */}
       <div className="flex items-center space-x-2">
-        <img src="/logo.png" alt="Logo" className="h-10 w-10" />
+        <img src={Logo} alt="Logo" className="h-20 w-25" />
         <span className="font-bold text-lg">SmartSanstha</span>
       </div>
 
@@ -20,7 +21,7 @@ export default function Navbar() {
 
       {/* Profile Icon */}
       <div>
-        <img src="/profile.png" alt="User" className="h-10 w-10 rounded-full border-2 border-white" />
+        <img src={User} alt="User" className="h-10 w-10 rounded-full border-2 border-white" />
       </div>
     </nav>
   );
