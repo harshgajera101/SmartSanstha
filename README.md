@@ -23,24 +23,59 @@ A modern, responsive web application built with React, TypeScript, and Tailwind 
 
 ```
 smartsanstha/
-├── src/
-│   ├── components/
-│   │   ├── common/          # Shared components (Header, Footer, Layout)
-│   │   ├── home/            # Homepage specific components
-│   │   └── ui/              # Reusable UI components
-│   ├── pages/               # Page components
-│   ├── types/               # TypeScript type definitions
-│   ├── hooks/               # Custom React hooks
-│   ├── constants/           # Static data and constants
-│   ├── App.tsx              # Main application component
-│   ├── main.tsx             # Application entry point
-│   └── index.css            # Global styles and Tailwind imports
-├── public/                  # Static assets
-├── index.html               # HTML template
-├── package.json             # Project dependencies
-├── tailwind.config.js       # Tailwind configuration
-├── tsconfig.json            # TypeScript configuration
-└── vite.config.ts           # Vite configuration
+├─ index.html
+├─ package.json
+├─ tsconfig.json
+├─ vite.config.ts
+├─ postcss.config.js
+├─ tailwind.config.js
+├─ .eslintrc.cjs            
+├─ .env                     
+├─ src/
+│  ├─ main.tsx
+│  ├─ App.tsx
+│  ├─ index.css
+│  ├─ routes.tsx
+│  ├─ types/
+│  │  └─ models.ts
+│  ├─ lib/
+│  │  ├─ api.ts
+│  │  ├─ auth.ts
+│  │  └─ utils.ts
+│  ├─ context/
+│  │  └─ AuthContext.tsx
+│  ├─ layouts/
+│  │  ├─ SiteLayout.tsx
+│  │  └─ DashboardLayout.tsx
+│  ├─ components/
+│  │  ├─ Navbar.tsx
+│  │  ├─ MobileMenu.tsx
+│  │  ├─ Footer.tsx
+│  │  ├─ Hero.tsx
+│  │  ├─ FeatureCards.tsx
+│  │  ├─ StatStrip.tsx
+│  │  ├─ PageHeader.tsx
+│  │  ├─ Card.tsx
+│  │  ├─ ProtectedRoute.tsx
+│  │  ├─ Sidebar.tsx
+│  │  ├─ Breadcrumbs.tsx
+│  │  ├─ QuizCard.tsx
+│  │  └─ GameCard.tsx
+│  ├─ pages/
+│  │  ├─ Home.tsx
+│  │  ├─ Learn.tsx
+│  │  ├─ Courtroom.tsx
+│  │  ├─ Games.tsx
+│  │  ├─ Dashboard.tsx
+│  │  ├─ Blog.tsx
+│  │  ├─ About.tsx
+│  │  ├─ Contact.tsx
+│  │  ├─ Login.tsx
+│  │  ├─ Signup.tsx
+│  │  └─ NotFound.tsx
+│  └─ assets/
+│     └─ images/
+└─ ...
 ```
 
 ## 🚀 Getting Started
