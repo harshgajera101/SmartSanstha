@@ -14,6 +14,9 @@ import Signup from '@/pages/Signup'
 import NotFound from '@/pages/NotFound'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
+import Memory from './pages/memory'
+import Right from './pages/right'
+
 const routes: RouteObject[] = [
   {
     path: '/',
@@ -28,6 +31,8 @@ const routes: RouteObject[] = [
       { path: 'contact', element: <Contact /> },
       { path: 'login', element: <Login /> },
       { path: 'signup', element: <Signup /> },
+      { path: 'memory', element: <Memory /> },
+      { path: 'right', element: <Right /> },
     ]
   },
   {
