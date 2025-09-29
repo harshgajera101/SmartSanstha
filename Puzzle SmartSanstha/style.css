@@ -1,0 +1,486 @@
+/* --- General Styles & Theme --- */
+:root {
+    --primary-bg: #0D1B2A;       /* Deep dark blue from mockup */
+    --secondary-bg: #1B263B;     /* Lighter card background */
+    --accent-color: #4DB6AC;     /* Cyan/turquoise for highlights */
+    --text-color: #F0F0F0;         /* Off-white text */
+    --border-radius: 12px;
+}
+
+body {
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* --- Header Styling (from Mockup) --- */
+.site-header {
+    width: 100%;
+    background-color: var(--secondary-bg);
+    padding: 10px 5%;
+    box-sizing: border-box;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.site-header nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+.site-header nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 25px;
+}
+
+.site-header nav a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.site-header nav a:hover, .site-header nav a.active {
+    background-color: var(--accent-color);
+    color: var(--primary-bg);
+}
+
+/* --- Main Game Content --- */
+#main-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.1em;
+    color: #bdc3c7;
+    margin-top: 0;
+}
+
+/* Game container with horizontal layout (UPDATED) */
+#game-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 30px;
+    margin-top: 30px;
+    width: 90%;          /* CHANGED: Makes the container wider */
+    max-width: 1600px;    /* ADDED: Sets a max width for large screens */
+}
+
+/* Wrapper for board and controls (UPDATED) */
+#board-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    flex: 2; /* ADDED: Makes this container take up 2/3 of the space */
+}
+
+/* --- The Puzzle Board (UPDATED) --- */
+#puzzle-board {
+    width: 450px;  /* CHANGED: A good size for both 3x3 and 4x4 */
+    height: 450px; /* CHANGED: A good size for both 3x3 and 4x4 */
+    background-color: var(--secondary-bg);
+    border: 2px solid var(--accent-color);
+    border-radius: var(--border-radius);
+    display: grid; /* Grid columns will be set by JS now */
+    padding: 5px;
+    box-shadow: 0 0 20px rgba(77, 182, 172, 0.2);
+    transition: opacity 0.5s ease-in-out, border 0.5s ease-in-out;
+}
+
+/* Class to temporarily show the hint image */
+#puzzle-board.show-hint {
+    background-image: url('assets/preamble-full.jpg');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.3;
+}
+
+.drop-zone {
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    box-sizing: border-box;
+}
+
+/* Styles for Hint Button and Timer */
+#game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 50px; /* Reserve space */
+}
+
+#hint-btn {
+    background-color: var(--accent-color);
+    color: var(--primary-bg);
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1em;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#hint-btn:hover {
+    background-color: #5bc0b4;
+    transform: scale(1.05);
+}
+
+#timer-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(13, 27, 42, 0.9);
+    color: var(--accent-color);
+    font-size: 2.5em;
+    font-weight: 700;
+    padding: 20px 40px;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--accent-color);
+    z-index: 1500;
+    pointer-events: none; /* Allows clicking through it */
+}
+
+/* --- The Pieces Tray (UPDATED) --- */
+#pieces-tray {
+    background-color: var(--secondary-bg);
+    border: 2px solid var(--accent-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* ADDED: Makes this container take up 1/3 of the space */
+    /* REMOVED: Fixed width and height to allow flexing */
+}
+
+#pieces-tray h2 {
+    margin-top: 0;
+    text-align: center;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+}
+
+/* Tray content is now a grid (UPDATED) */
+#tray-content {
+    display: grid;
+    /* REMOVED: grid-template-columns is now set by JS */
+    gap: 10px; /* CHANGED: Reduced gap slightly */
+    padding: 10px;
+    justify-items: center;
+}
+
+/* --- The Puzzle Pieces (UPDATED) --- */
+.puzzle-piece {
+    width: 100px;  /* CHANGED: Smaller size for better 4x4 fit */
+    height: 100px; /* CHANGED: Smaller size for better 4x4 fit */
+    cursor: grab;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 8px;
+}
+
+.puzzle-piece:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--accent-color);
+}
+
+/* --- Fact Popup (Styled like a modal) --- */
+#fact-popup {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translate(-50%, -20px);
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    padding: 20px 30px;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+    max-width: 80%;
+}
+
+#fact-popup:not(.hidden) {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+}
+
+#fact-text {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+/* --- Completion Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(13, 27, 42, 0.8); /* Dark overlay from --primary-bg */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none;
+}
+
+.modal-overlay:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: var(--secondary-bg);
+    padding: 30px 40px;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 5px 30px rgba(0,0,0,0.4);
+    text-align: center;
+    max-width: 500px;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-overlay:not(.hidden) .modal-content {
+    transform: scale(1);
+}
+
+.modal-content h2 {
+    color: var(--accent-color);
+    margin-top: 0;
+}
+
+.modal-content h3 {
+    font-weight: 400;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+#completion-fact-text {
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-button:hover {
+    color: var(--text-color);
+}
+
+#play-again-btn {
+    background-color: var(--accent-color);
+    color: var(--primary-bg);
+    border: none;
+    padding: 12px 30px;
+    font-size: 1em;
+    font-weight: 600;
+    border-radius: 50px; /* Pill shape */
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#play-again-btn:hover {
+    background-color: #5bc0b4; /* Lighter shade of accent */
+    transform: scale(1.05);
+}
+
+/* --- Completion Animation --- */
+.completed {
+    opacity: 1 !important;
+    border: 3px solid var(--accent-color);
+    box-shadow: 0 0 25px var(--accent-color);
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ADD THIS ENTIRE BLOCK to the end of your style.css file */
+
+/* --- Puzzle Selection Menu --- */
+#puzzle-selection {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.puzzle-select-btn {
+    background-color: transparent;
+    border: 2px solid var(--accent-color);
+    color: var(--accent-color);
+    padding: 10px 25px;
+    font-size: 1em;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.puzzle-select-btn:hover {
+    background-color: var(--accent-color);
+    color: var(--primary-bg);
+}
+
+.puzzle-select-btn.active {
+    background-color: var(--accent-color);
+    color: var(--primary-bg);
+    box-shadow: 0 0 10px var(--accent-color);
+}
+
+#hint-timer {
+    color: var(--accent-color);
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-left: 15px; /* Adds some space next to the button */
+    transition: opacity 0.3s;
+}
+
+/* --- Learn Page (Personalized Layout) --- */
+
+#personalized-greeting h2 {
+    font-size: 1.8em;
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+#personalized-greeting h2 strong {
+    color: #fff;
+}
+
+#learning-container {
+    display: flex;
+    flex-direction: column; /* Lays out sections vertically */
+    gap: 25px;
+    width: 100%;
+}
+
+.learning-section {
+    background-color: var(--secondary-bg);
+    border: 2px solid var(--accent-color);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    transition: all 0.3s ease;
+}
+
+/* NEW: Style for the user's main learning path */
+.learning-section.highlighted {
+    border-color: #fff; /* White border to stand out */
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+}
+
+.learning-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+}
+
+.articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.article-card {
+    background-color: var(--primary-bg);
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.article-card:hover {
+    transform: translateY(-3px);
+    background-color: rgba(77, 182, 172, 0.2);
+}
+
+/* ADD THESE STYLES to your style.css file */
+
+/* Style for the divider between sections */
+.section-divider {
+    width: 100%;
+    text-align: center;
+    border-bottom: 2px solid var(--accent-color);
+    line-height: 0.1em;
+    margin: 40px 0;
+}
+
+.section-divider h3 {
+    background: var(--primary-bg);
+    padding: 0 20px;
+    color: var(--accent-color);
+}
+
+/* Style for the new article modal */
+/* Note: It reuses the .modal-overlay and .modal-content from the puzzle game for consistency */
+#modal-title {
+    color: var(--accent-color);
+}
+
+#modal-articles {
+    font-size: 1.2em;
+    color: #fff;
+    background-color: var(--primary-bg);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+/* ADD THIS to your style.css file */
+
+.subheading {
+    color: #bdc3c7; /* Lighter grey color */
+    font-size: 0.8em; /* Slightly smaller font size */
+    font-weight: 400; /* Normal font weight */
+}
