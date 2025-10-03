@@ -160,7 +160,6 @@ const FAQ = () => {
   );
 };
 
-
 const GamePage = () => {
     // ... [Memory Game logic remains unchanged]
     const [cards, setCards] = useState<ArticleCard[]>(() => []);
@@ -439,7 +438,6 @@ const FeaturesPage = () => (
         </div>
     </div>
 );
-
 
 const ContactPage = () => {
     const [submitted, setSubmitted] = useState(false);
