@@ -1,21 +1,7 @@
 import { RouteObject, Navigate } from 'react-router-dom'
 import SiteLayout from '@/layouts/SiteLayout'
-import DashboardLayout from '@/layouts/DashboardLayout'
+// import DashboardLayout from '@/layouts/DashboardLayout'
 import Home from '@/pages/Home'
-import Learn from '@/pages/Learn'
-import Courtroom from '@/pages/Courtroom'
-import Games from '@/pages/Games'
-import Blog from '@/pages/Blog'
-import About from '@/pages/About'
-import Contact from '@/pages/Contact'
-import Dashboard from '@/pages/Dashboard'
-import Login from '@/pages/Login'
-import Signup from '@/pages/Signup'
-import NotFound from '@/pages/NotFound'
-import ProtectedRoute from '@/components/ProtectedRoute'
-
-import Memory from './pages/memory'
-import Right from './pages/right'
 
 const routes: RouteObject[] = [
   {
@@ -23,31 +9,30 @@ const routes: RouteObject[] = [
     element: <SiteLayout />,
     children: [
       { index: true, element: <Home /> },
-      { path: 'learn', element: <Learn /> },
-      { path: 'courtroom', element: <Courtroom /> },
-      { path: 'games', element: <Games /> },
-      { path: 'blog', element: <Blog /> },
-      { path: 'about', element: <About /> },
-      { path: 'contact', element: <Contact /> },
-      { path: 'login', element: <Login /> },
-      { path: 'signup', element: <Signup /> },
-      { path: 'memory', element: <Memory /> },
-      { path: 'right', element: <Right /> },
+      // { path: 'learn', element: <Learn /> },
+      // { path: 'games', element: <Games /> },
+      // { path: 'blog', element: <Blog /> },
+      // { path: 'about', element: <About /> },
+      // { path: 'contact', element: <Contact /> },
+      // { path: 'login', element: <Login /> },
+      // { path: 'signup', element: <Signup /> },
+      // { path: 'memory', element: <Memory /> },
+      // { path: 'right', element: <Right /> },
     ]
   },
-  {
-    path: '/dashboard',
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      { index: true, element: <Dashboard /> },
-      { path: '*', element: <Navigate to="/dashboard" /> }
-    ]
-  },
-  { path: '*', element: <NotFound /> }
+  // {
+  //   path: '/dashboard',
+  //   element: (
+  //     // <ProtectedRoute>
+  //       <DashboardLayout />
+  //     // </ProtectedRoute> 
+  //   ),
+  //   children: [
+  //     // { index: true, element: <Dashboard /> },
+  //     { path: '*', element: <Navigate to="/dashboard" /> }
+  //   ]
+  // },
+  // { path: '*', element: <NotFound /> }
 ]
 
 export default routes
