@@ -1,5 +1,5 @@
 import { RouteObject, Navigate } from 'react-router-dom'
-import SiteLayout from '@/layouts/SiteLayout'
+import SiteLayout from '@/components/layout/SiteLayout'
 // import DashboardLayout from '@/layouts/DashboardLayout'
 import Home from '@/pages/Home'
 
