@@ -760,7 +760,7 @@ const Footer = ({ setPage }: { setPage: (page: string) => void }) => (
     </footer>
 );
 
-export default function App(): JSX.Element {
+export default function App(): React.ReactElement {
   const [page, setPage] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
