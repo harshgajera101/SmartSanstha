@@ -1,21 +1,41 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          600: '#2563eb', // blue-600
-          700: '#1d4ed8', // blue-700
-          900: '#1e3a8a', // blue-900
+          50: '#fef3f2',
+          100: '#fee5e2',
+          200: '#fecfca',
+          300: '#fdada4',
+          400: '#fa7e6f',
+          500: '#f25942',
+          600: '#df3a25',
+          700: '#bc2e1b',
+          800: '#9c291a',
+          900: '#81271d',
+        },
+        accent: {
+          50: '#fef6ee',
+          100: '#fdead7',
+          200: '#fad1ae',
+          300: '#f7b17a',
+          400: '#f38744',
+          500: '#f06820',
+          600: '#e14d16',
+          700: '#ba3914',
+          800: '#942f18',
+          900: '#782916',
         },
       },
-      boxShadow: {
-        soft: '0 2px 6px rgba(0,0,0,0.1)',
+      animation: {
+        'fade-in': 'fade-in 0.6s ease-out',
+        'fade-in-down': 'fade-in-down 0.3s ease-out',
+        'bounce-in': 'bounce-in 0.6s ease-out',
+        'spin-slow': 'spin-slow 3s linear infinite',
       },
     },
   },
