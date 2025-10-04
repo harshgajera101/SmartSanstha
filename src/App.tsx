@@ -7,12 +7,12 @@
 // }
 
 
-
 import React, { useState } from 'react';
 import { Layout } from './components/layout/Layout';
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
+import { ArticlePage } from './pages/ArticlePage';
 import { LearnPage } from './components/learn/LearnPage';
 import { ExploreGames } from './components/games/ExploreGames';
 import { MemoryGame } from './components/games/MemoryGame/MemoryGame';
@@ -30,7 +30,9 @@ function App() {
       case 'about':
         return <AboutPage />;
       case 'learn':
-        return <LearnPage />;
+        return <LearnPage onNavigate={setCurrentPage} />;
+      case 'article':
+        return <ArticlePage onNavigate={setCurrentPage} />;
       case 'games':
         return <ExploreGames onNavigate={setCurrentPage} />;
       case 'memory-game':

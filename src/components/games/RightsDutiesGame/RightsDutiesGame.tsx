@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Scale } from 'lucide-react';
+import { Scale, Info } from 'lucide-react';
 import { SCENARIOS } from '../../../data/gamesData';
 import { IToken, IRandomEvent } from '../../../types';
 import { BalanceMeter } from './BalanceMeter';
 import { ScenarioDisplay } from './ScenarioDisplay';
 import { TokenTray } from './TokenTray';
-// import { DropScale } from './DropScale';
+import { DropScale } from './DropScale';
 import { Modal } from '../../common/Modal';
 import { Button } from '../../common/Button';
+import { Card } from '../../common/Card';
 
 export const RightsDutiesGame: React.FC = () => {
   const [gameState, setGameState] = useState<'playing' | 'debrief' | 'end'>('playing');
@@ -90,7 +91,7 @@ export const RightsDutiesGame: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl animate-fade-in">
+    <div className="w-full max-w-5xl animate-fade-in">
       <header className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-xl mb-6">
           <Scale className="w-10 h-10 text-white" />
@@ -101,6 +102,27 @@ export const RightsDutiesGame: React.FC = () => {
         <p className="text-lg text-slate-400">Navigate complex scenarios and balance freedom with order</p>
       </header>
 
+      {/* How to Play Instructions */}
+      {gameState === 'playing' && currentScenarioIndex === 0 && (
+        <Card className="mb-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/30">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Info className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white mb-2">How to Play</h3>
+              <ol className="text-slate-300 text-sm space-y-1 list-decimal list-inside">
+                <li>Read the scenario carefully</li>
+                <li><strong>Drag a decision token</strong> from the bottom</li>
+                <li><strong>Drop it in the decision zone</strong> (the dashed box below)</li>
+                <li>See how your choice affects the balance</li>
+                <li>Complete all scenarios to see your final result</li>
+              </ol>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <main>
         {(gameState === 'playing' || gameState === 'debrief') && (
           <>
@@ -110,7 +132,7 @@ export const RightsDutiesGame: React.FC = () => {
               currentIndex={currentScenarioIndex} 
               totalScenarios={SCENARIOS.length}
             />
-            {/* <DropScale onDrop={handleTokenDrop} /> */}
+            <DropScale onDrop={handleTokenDrop} />
             <TokenTray tokens={currentScenario.tokens} />
           </>
         )}
@@ -156,7 +178,7 @@ export const RightsDutiesGame: React.FC = () => {
                 </div>
               </div>
               <Button onClick={handleNextScenario} variant="primary" size="lg">
-                {currentScenarioIndex < SCENARIOS.length - 1 ? 'Next Scenario' : 'See Results'}
+                {currentScenarioIndex < SCENARIOS.length - 1 ? 'Next Scenario →' : 'See Final Results'}
               </Button>
             </div>
           </Modal>
