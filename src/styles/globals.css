@@ -132,3 +132,27 @@ html {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+
+
+/* Enables 3D perspective */
+.perspective {
+  perspective: 1000px;
+}
+
+/* Keeps children in 3D space */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Hides the face that is turned away */
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Rotates the back face correctly */
+.rotateY-180 {
+  transform: rotateY(180deg);
+}
+
+

@@ -5,7 +5,11 @@ import { CONSTITUTION_PARTS, RECOMMENDED_ARTICLES } from '../../data/articlesDat
 import { ArticleCard } from './ArticleCard';
 import { ConstitutionParts } from './ConstitutionParts';
 
-export const LearnPage: React.FC = () => {
+interface LearnPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export const LearnPage: React.FC<LearnPageProps> = ({ onNavigate = () => {} }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -73,7 +77,7 @@ export const LearnPage: React.FC = () => {
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {RECOMMENDED_ARTICLES.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+            <ArticleCard key={article.id} article={article} onNavigate={onNavigate} />
           ))}
         </div>
       </div>
@@ -113,6 +117,7 @@ export const LearnPage: React.FC = () => {
       <ConstitutionParts
         searchQuery={searchQuery}
         selectedCategory={selectedCategory}
+        onNavigate={onNavigate}
       />
     </div>
   );
