@@ -6,11 +6,13 @@ import { BookOpen, FileText, TrendingUp } from 'lucide-react';
 interface ConstitutionPartsProps {
   searchQuery: string;
   selectedCategory: string;
+  onNavigate?: (page: string) => void;
 }
 
 export const ConstitutionParts: React.FC<ConstitutionPartsProps> = ({
   searchQuery,
   selectedCategory,
+  onNavigate = () => {}
 }) => {
   const filteredParts = CONSTITUTION_PARTS.filter((part) => {
     const matchesSearch =
@@ -44,7 +46,12 @@ export const ConstitutionParts: React.FC<ConstitutionPartsProps> = ({
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredParts.map((part) => (
-          <Card key={part.id} hover className="group">
+          <Card 
+            key={part.id} 
+            hover 
+            className="group cursor-pointer"
+            onClick={() => onNavigate('article')}
+          >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className={`w-12 h-12 bg-gradient-to-br ${difficultyColors[part.difficulty]} rounded-xl flex items-center justify-center font-bold text-white text-lg group-hover:scale-110 transition-transform`}>

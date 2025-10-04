@@ -11,9 +11,10 @@ interface ArticleCardProps {
     readTime: number;
     category: string;
   };
+  onNavigate: (page: string) => void;
 }
 
-export const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
+export const ArticleCard: React.FC<ArticleCardProps> = ({ article, onNavigate }) => {
   const categoryColors: { [key: string]: string } = {
     'fundamental-rights': 'from-blue-500 to-cyan-500',
     'directive-principles': 'from-purple-500 to-pink-500',
@@ -22,7 +23,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
   };
 
   return (
-    <Card hover className="group">
+    <Card hover className="group cursor-pointer" onClick={() => onNavigate('article')}>
       <div className={`w-12 h-12 bg-gradient-to-br ${categoryColors[article.category]} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
         <BookOpen className="w-6 h-6 text-white" />
       </div>
