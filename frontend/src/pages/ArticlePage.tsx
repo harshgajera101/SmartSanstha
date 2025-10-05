@@ -581,7 +581,6 @@
 
 
 
-
 import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, 
@@ -589,6 +588,7 @@ import {
   Lightbulb, 
   Scale, 
   ChevronRight, 
+  ChevronLeft,
   CheckCircle, 
   XCircle,
   Award,
@@ -611,13 +611,32 @@ import { articleAPI, quizAPI } from '../services/api';
 
 interface ArticlePageProps {
   onNavigate: (page: string, data?: any) => void;
-  articleData?: { articleNumber: string };
+  articleData?: { 
+    articleNumber: string;
+    allArticles?: any[]; // All articles in the current part
+    currentIndex?: number; // Current article index in the part
+    partName?: string;     // Add this
+    partTitle?: string;    // Add this
+  };
 }
 
 export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleData }) => {
-  // Debug logs
   console.log('📄 ArticlePage mounted');
   console.log('📦 Article data received:', articleData);
+
+//   useEffect(() => {
+//   console.log('📦 ArticlePage received data:');
+//   console.log('  - articleNumber:', articleData?.articleNumber);
+//   console.log('  - allArticles:', articleData?.allArticles);
+//   console.log('  - currentIndex:', articleData?.currentIndex);
+  
+//   if (articleData?.allArticles) {
+//     console.log('📚 All articles in this part:');
+//     articleData.allArticles.forEach((art: any, idx: number) => {
+//       console.log(`  ${idx}: ${art.article} - ${art.title}`);
+//     });
+//   }
+// }, [articleData]);
   
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -631,9 +650,19 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
   const [showResults, setShowResults] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
+  // Navigation state
+  const [allArticles, setAllArticles] = useState<any[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   useEffect(() => {
     if (articleData?.articleNumber) {
       fetchArticle(articleData.articleNumber);
+      
+      // Set up navigation data if provided
+      if (articleData.allArticles) {
+        setAllArticles(articleData.allArticles);
+        setCurrentIndex(articleData.currentIndex || 0);
+      }
     } else {
       setError('No article number provided');
       setLoading(false);
@@ -653,6 +682,9 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
       if (response?.success) {
         setArticle(response.data);
         console.log('✅ Article loaded:', response.data.articleName);
+        
+        // Scroll to top when new article loads
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setError('Failed to load article data');
       }
@@ -661,6 +693,84 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
       setError('Failed to load article. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePreviousArticle = () => {
+    if (currentIndex > 0) {
+      const prevArticle = allArticles[currentIndex - 1];
+      console.log('⬅️ Going to previous article:', prevArticle);
+      
+      // Extract article number
+      let articleNumber = '';
+      
+      if (prevArticle.article === 'Preamble') {
+        articleNumber = '0';
+      } else {
+        const match = prevArticle.article?.match(/Article\s+(\d+)/);
+        if (match) {
+          articleNumber = match[1];
+        } else if (prevArticle.id) {
+          const idMatch = prevArticle.id.match(/article-(\d+)/);
+          if (idMatch) {
+            articleNumber = idMatch[1];
+          }
+        }
+      }
+      
+      console.log('🔢 Extracted article number:', articleNumber);
+      
+      if (articleNumber) {
+        onNavigate('article', {
+          articleNumber,
+          allArticles: allArticles,
+          currentIndex: currentIndex - 1,
+          partName: articleData?.partName,      // Preserve part info
+          partTitle: articleData?.partTitle     // Preserve part info
+        });
+      } else {
+        console.error('❌ Could not extract article number from:', prevArticle);
+        alert('Unable to navigate to previous article');
+      }
+    }
+  };
+
+  const handleNextArticle = () => {
+    if (currentIndex < allArticles.length - 1) {
+      const nextArticle = allArticles[currentIndex + 1];
+      console.log('➡️ Going to next article:', nextArticle);
+      
+      // Extract article number
+      let articleNumber = '';
+      
+      if (nextArticle.article === 'Preamble') {
+        articleNumber = '0';
+      } else {
+        const match = nextArticle.article?.match(/Article\s+(\d+)/);
+        if (match) {
+          articleNumber = match[1];
+        } else if (nextArticle.id) {
+          const idMatch = nextArticle.id.match(/article-(\d+)/);
+          if (idMatch) {
+            articleNumber = idMatch[1];
+          }
+        }
+      }
+      
+      console.log('🔢 Extracted article number:', articleNumber);
+      
+      if (articleNumber) {
+        onNavigate('article', {
+          articleNumber,
+          allArticles: allArticles,
+          currentIndex: currentIndex + 1,
+          partName: articleData?.partName,      // Preserve part info
+          partTitle: articleData?.partTitle     // Preserve part info
+        });
+      } else {
+        console.error('❌ Could not extract article number from:', nextArticle);
+        alert('Unable to navigate to next article');
+      }
     }
   };
 
@@ -712,6 +822,25 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
     }
   };
 
+  const handleBackToPart = () => {
+    // Navigate back to the part articles page
+    if (articleData?.partName && articleData?.partTitle) {
+      onNavigate('part-articles', {
+        partName: articleData.partName,
+        partTitle: articleData.partTitle
+      });
+    } else if (article?.part?.name) {
+      // Fallback to article's part name if not provided
+      onNavigate('part-articles', {
+        partName: article.part.name,
+        partTitle: article.part.name
+      });
+    } else {
+      // If no part info, go to learn page
+      onNavigate('learn');
+    }
+  };
+
   const calculateScore = () => {
     let correct = 0;
     selectedAnswers.forEach((answer, index) => {
@@ -755,23 +884,28 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-4">Article Not Found</h2>
           <p className="text-slate-400 mb-6">{error || 'The requested article could not be found.'}</p>
-          <Button onClick={() => onNavigate('learn')}>
-            Back to Learn
+          <Button onClick={handleBackToPart}>
+            Back to Part
           </Button>
         </Card>
       </div>
     );
   }
 
+  const hasPrevious = currentIndex > 0;
+  const hasNext = currentIndex < allArticles.length - 1;
+  const previousArticle = hasPrevious ? allArticles[currentIndex - 1] : null;
+  const nextArticle = hasNext ? allArticles[currentIndex + 1] : null;
+
   return (
-    <div className="w-full max-w-6xl animate-fade-in">
+    <div className="w-full max-w-6xl animate-fade-in pb-32">
       {/* Back Button */}
       <button
-        onClick={() => onNavigate('learn')}
+        onClick={handleBackToPart}
         className="flex items-center gap-2 text-slate-400 hover:text-orange-400 transition-colors mb-6 group"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span>Back to Learn</span>
+        <span>Back to {articleData?.partTitle || article?.part?.name || 'Part'}</span>
       </button>
 
       {/* Header Section */}
@@ -1002,179 +1136,60 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
         </Card>
       )}
 
-      {/* Quiz Section */}
-      <Card className="mb-8 bg-gradient-to-br from-slate-800 to-slate-900 border-orange-500/30">
-        {!showQuiz ? (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-              <Brain className="w-10 h-10 text-white" />
-            </div>
-            <h3 className="text-3xl font-bold text-white mb-4">Test Your Knowledge</h3>
-            <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
-              Take a quick 5-question quiz to see how well you understood {article.articleNumber}
-            </p>
-            <Button
-              size="lg"
-              onClick={handleStartQuiz}
-              disabled={quizLoading}
-              icon={quizLoading ? <Loader className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
+      {/* Inline Navigation Control Bar - NEW DESIGN */}
+      {allArticles.length > 0 && (
+        <Card className="mb-8 bg-gradient-to-r from-slate-800/50 to-slate-900/50 border-slate-700">
+          <div className="flex items-center justify-between gap-6 py-4">
+            {/* Previous Button */}
+            <button
+              onClick={handlePreviousArticle}
+              disabled={!hasPrevious}
+              className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all border-2 ${
+                hasPrevious
+                  ? 'border-orange-500 text-orange-400 hover:bg-orange-500/10'
+                  : 'border-slate-700 text-slate-600 cursor-not-allowed'
+              }`}
             >
-              {quizLoading ? 'Generating Quiz...' : 'Start Quiz'}
-            </Button>
-            <p className="text-slate-500 text-sm mt-4">
-              Note: Quiz generation requires Google Gemini API configuration
-            </p>
-          </div>
-        ) : !showResults ? (
-          <div className="animate-fade-in">
-            {/* Quiz Progress */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-slate-400 font-semibold">
-                  Question {currentQuestion + 1} of {quiz.length}
-                </span>
-                <span className="text-slate-400 font-semibold">
-                  {selectedAnswers.filter(a => a !== undefined).length}/{quiz.length} Answered
-                </span>
+              <ChevronLeft className="w-5 h-5" />
+              <span>Previous</span>
+            </button>
+
+            {/* Center Text */}
+            <div className="text-center flex-1">
+              <div className="text-slate-300 font-semibold text-lg">
+                Article {currentIndex + 1} of {allArticles.length}
               </div>
-              <ProgressBar
-                value={(currentQuestion + 1) / quiz.length * 100}
-                color="primary"
+              <div className="text-slate-500 text-sm mt-1">
+                {article.part?.name || 'Constitution'}
+              </div>
+            </div>
+
+            {/* Next Button */}
+            <button
+              onClick={handleNextArticle}
+              disabled={!hasNext}
+              className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all ${
+                hasNext
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-lg'
+                  : 'bg-slate-700 text-slate-600 cursor-not-allowed'
+              }`}
+            >
+              <span>Next</span>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-4 pt-4 border-t border-slate-700">
+            <div className="w-full bg-slate-800 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${((currentIndex + 1) / allArticles.length) * 100}%` }}
               />
             </div>
-
-            {/* Question */}
-            {quiz[currentQuestion] && (
-              <>
-                <div className="mb-8">
-                  <h4 className="text-2xl font-bold text-white mb-6 flex items-start gap-3">
-                    <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 text-sm">
-                      {currentQuestion + 1}
-                    </span>
-                    {quiz[currentQuestion].question}
-                  </h4>
-
-                  {/* Options */}
-                  <div className="space-y-3">
-                    {quiz[currentQuestion].options?.map((option: string, index: number) => (
-                      <button
-                        key={index}
-                        onClick={() => handleAnswerSelect(index)}
-                        className={`w-full p-5 rounded-xl text-left transition-all border-2 ${
-                          selectedAnswers[currentQuestion] === index
-                            ? 'bg-orange-500 border-orange-400 text-white shadow-lg'
-                            : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500'
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                            selectedAnswers[currentQuestion] === index
-                              ? 'border-white bg-white text-orange-500'
-                              : 'border-slate-500'
-                          }`}>
-                            {selectedAnswers[currentQuestion] === index && (
-                              <CheckCircle className="w-5 h-5" />
-                            )}
-                          </div>
-                          <span className="font-medium">{option}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-between items-center pt-6 border-t border-slate-700">
-                  <Button
-                    variant="outline"
-                    onClick={handlePreviousQuestion}
-                    disabled={currentQuestion === 0}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    onClick={handleNextQuestion}
-                    disabled={selectedAnswers[currentQuestion] === undefined}
-                  >
-                    {currentQuestion === quiz.length - 1 ? 'Finish Quiz' : 'Next Question'}
-                  </Button>
-                </div>
-              </>
-            )}
           </div>
-        ) : (
-          <div className="text-center py-12 animate-fade-in">
-            {/* Results */}
-            <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-              <Award className="w-12 h-12 text-white" />
-            </div>
-            <h3 className="text-4xl font-bold text-white mb-4">Quiz Complete!</h3>
-            <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 mb-2">
-              {calculateScore()}/{quiz.length}
-            </div>
-            <p className="text-slate-400 text-xl mb-8">
-              {calculateScore() === quiz.length
-                ? 'Perfect score! You mastered this article! 🏆'
-                : calculateScore() >= 3
-                ? 'Great job! You have a good understanding! 👏'
-                : 'Keep learning! Review the article and try again. 📚'}
-            </p>
-
-            {/* Detailed Results */}
-            <div className="max-w-3xl mx-auto mb-8 text-left space-y-4">
-              {quiz.map((question: any, index: number) => {
-                const isCorrect = selectedAnswers[index] === question.correctAnswer;
-                return (
-                  <Card key={index} className={`${isCorrect ? 'border-green-500/50' : 'border-red-500/50'}`}>
-                    <div className="flex items-start gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isCorrect ? 'bg-green-500' : 'bg-red-500'
-                      }`}>
-                        {isCorrect ? (
-                          <CheckCircle className="w-6 h-6 text-white" />
-                        ) : (
-                          <XCircle className="w-6 h-6 text-white" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h5 className="font-bold text-white mb-2">{question.question}</h5>
-                        <p className={`text-sm mb-2 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                          Your answer: {question.options?.[selectedAnswers[index]]}
-                        </p>
-                        {!isCorrect && (
-                          <p className="text-sm text-green-400 mb-2">
-                            Correct answer: {question.options?.[question.correctAnswer]}
-                          </p>
-                        )}
-                        {question.explanation && (
-                          <p className="text-slate-400 text-sm">{question.explanation}</p>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 justify-center">
-              <Button
-                variant="outline"
-                onClick={resetQuiz}
-                icon={<RotateCcw className="w-5 h-5" />}
-              >
-                Retake Quiz
-              </Button>
-              <Button
-                onClick={() => onNavigate('learn')}
-                icon={<BookOpen className="w-5 h-5" />}
-              >
-                Learn More Articles
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   );
 };
