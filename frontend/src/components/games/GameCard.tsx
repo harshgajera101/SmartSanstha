@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Brain, Scale, Zap, Puzzle, Lightbulb, Lock } from 'lucide-react';
+import { Clock, Lock, Brain, Scale, Zap, Puzzle, Lightbulb, Building2, Landmark, Gamepad2 } from 'lucide-react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Game } from '../../types';
@@ -16,6 +16,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onPlay }) => {
     Zap,
     Puzzle,
     Lightbulb,
+    Building2, 
+    Landmark, 
+    Building: Building2, 
   };
 
   const Icon = icons[game.icon as keyof typeof icons] || Brain;

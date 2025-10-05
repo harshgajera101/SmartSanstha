@@ -28,6 +28,8 @@ import { LearnPage } from './components/learn/LearnPage';
 import { ExploreGames } from './components/games/ExploreGames';
 import { MemoryGame } from './components/games/MemoryGame/MemoryGame';
 import { RightsDutiesGame } from './components/games/RightsDutiesGame/RightsDutiesGame';
+import  CivicCityBuilder  from './components/games/CivicCityBuilder/CivicCityBuilder';
+import JigsawPuzzle from './components/games/JigsawPuzzle/JigsawPuzzle'; 
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ChatbotFloating } from './components/chatbot/ChatbotFloating';
 
@@ -61,6 +63,10 @@ function App() {
         return <MemoryGame />;
       case 'rights-duties-game':
         return <RightsDutiesGame />;
+      case 'civic-city-builder':
+        return <CivicCityBuilder />;
+      case 'jigsaw-puzzle':
+        return <JigsawPuzzle />;  
       case 'dashboard':
         return <Dashboard />;
       case 'contact':
