@@ -5,9 +5,9 @@ import { Card } from '../components/common/Card';
 export const AboutPage: React.FC = () => {
   const team = [
     { name: 'Mohammad Waseem Khan', id: '22104050', role: 'Full Stack Developer' },
-    { name: 'Siddhant Gaikwad', id: '22104083', role: 'Backend & AI Specialist' },
+    { name: 'Siddhant Gaikwad', id: '22104083', role: 'UI/UX Designer' },
     { name: 'Harsh Gajera', id: '22104099', role: 'Frontend Developer' },
-    { name: 'Sekhar Gauda', id: '22104044', role: 'UI/UX Designer' },
+    { name: 'Sekhar Gauda', id: '22104044', role: 'Backend & AI Specialist' },
   ];
 
   return (
