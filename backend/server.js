@@ -39,6 +39,36 @@ async function connectDB() {
 }
 
 // =================================================================
+// HELPER FUNCTIONS
+// =================================================================
+
+function extractPartNumber(partName) {
+  if (partName === 'Preamble') return 0;
+  
+  // Extract Roman numerals from part name (e.g., "Part III" -> "III")
+  const match = partName.match(/Part\s+([IVXLCDM]+)/i);
+  if (match) {
+    return romanToDecimal(match[1]);
+  }
+  return 999; // Unknown parts go to end
+}
+
+function romanToDecimal(roman) {
+  const romanMap = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+  let result = 0;
+  for (let i = 0; i < roman.length; i++) {
+    const current = romanMap[roman[i]];
+    const next = romanMap[roman[i + 1]];
+    if (next && current < next) {
+      result -= current;
+    } else {
+      result += current;
+    }
+  }
+  return result;
+}
+
+// =================================================================
 // ROUTES
 // =================================================================
 
@@ -52,45 +82,34 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Root route
-app.get('/', (req, res) => {
-  console.log('🎯 Root endpoint was hit!');
-  res.json({ 
-    message: 'SmartSanstha Backend API',
-    endpoints: [
-      'GET /api/test',
-      'GET /api/articles/parts',
-      'GET /api/articles/recommended',
-      'GET /api/articles/:articleNumber'
-    ]
-  });
-});
-
-// Get all parts
+// Get all parts with articles
 app.get('/api/articles/parts', async (req, res) => {
   console.log('🎯 /api/articles/parts endpoint was hit!');
   try {
+    // Fetch all articles from database
     const articles = await articlesCollection.find({}).toArray();
-    console.log(`📚 Found ${articles.length} articles`);
+    console.log(`📚 Found ${articles.length} total articles`);
     
-    // Group by Part
+    // Group articles by Part
     const partsMap = new Map();
     
     articles.forEach(article => {
       const partName = article.Part;
+      
       if (!partsMap.has(partName)) {
         partsMap.set(partName, {
           id: `part-${partName.toLowerCase().replace(/\s+/g, '-')}`,
-          partNumber: partName === 'Preamble' ? 0 : 1,
+          partNumber: extractPartNumber(partName),
           title: partName,
-          description: `Learn about ${partName}`,
+          description: `Learn about ${partName} of the Indian Constitution`,
           articles: [],
           totalArticles: 0,
-          category: 'fundamental-rights',
+          category: 'fundamental-rights', // You can categorize based on Part later
           difficulty: 'beginner'
         });
       }
       
+      // Add article to this part
       partsMap.get(partName).articles.push({
         article: article.Article,
         title: article.Title
@@ -98,8 +117,11 @@ app.get('/api/articles/parts', async (req, res) => {
       partsMap.get(partName).totalArticles++;
     });
 
-    const parts = Array.from(partsMap.values());
+    // Convert to array and sort by part number
+    const parts = Array.from(partsMap.values()).sort((a, b) => a.partNumber - b.partNumber);
+    
     console.log(`📦 Returning ${parts.length} parts`);
+    console.log('Parts:', parts.map(p => `${p.title} (${p.totalArticles} articles)`));
     
     res.json({
       success: true,
@@ -116,35 +138,79 @@ app.get('/api/articles/parts', async (req, res) => {
   }
 });
 
-// Get recommended articles - THIS WAS MISSING!
-app.get('/api/articles/recommended', async (req, res) => {
-  console.log('🎯 /api/articles/recommended endpoint was hit!');
+// Get single article by article number
+app.get('/api/articles/:articleNumber', async (req, res) => {
+  console.log('🎯 /api/articles/:articleNumber endpoint was hit!');
   try {
-    const articles = await articlesCollection
-      .find({ Article: { $in: ['14', '19', '21'] } })
-      .toArray();
+    const { articleNumber } = req.params;
+    console.log(`📄 Searching for article: ${articleNumber}`);
     
-    console.log(`⭐ Found ${articles.length} recommended articles`);
+    // Find article in database - using exact match on Article field
+    const article = await articlesCollection.findOne({ Article: articleNumber });
 
-    const formatted = articles.map(article => ({
-      id: `article-${article.Article}`,
-      article: `Article ${article.Article}`,
-      title: article.Title,
-      summary: article.Simplified_Description,
-      readTime: 5,
-      category: 'fundamental-rights'
-    }));
+    if (!article) {
+      console.log(`❌ Article ${articleNumber} not found`);
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Article not found' 
+      });
+    }
+
+    console.log(`✅ Found article: ${article.Title}`);
+
+    // Format response using ONLY the fields from your database
+    const formatted = {
+      articleNumber: article.Article === '0' ? 'Preamble' : `Article ${article.Article}`,
+      articleName: article.Title,
+      part: {
+        number: extractPartNumber(article.Part),
+        name: article.Part,
+        category: 'fundamental-rights'
+      },
+      simplifiedDescription: article.Simplified_Description,
+      originalText: article.Original_Description,
+      keyPoints: article.Key_Points || [],
+      historicalContext: article.Historical_Context || 'Not available',
+      landmarkCases: (article.Landmark_Cases || []).map(caseStr => {
+        // Parse "Case Name: Significance" format
+        const colonIndex = caseStr.indexOf(':');
+        if (colonIndex > -1) {
+          return {
+            name: caseStr.substring(0, colonIndex).trim(),
+            significance: caseStr.substring(colonIndex + 1).trim()
+          };
+        }
+        return {
+          name: caseStr,
+          significance: ''
+        };
+      }),
+      relatedArticles: (article.Related_Articles || []).map(related => {
+        // Parse "Article X (Name)" or "Part X (Name)" format
+        const match = related.match(/^(.*?)\s*\((.*?)\)$/);
+        if (match) {
+          return {
+            number: match[1].trim(),
+            name: match[2].trim()
+          };
+        }
+        return {
+          number: related,
+          name: related
+        };
+      }),
+      subject: article.Subject
+    };
 
     res.json({
       success: true,
-      data: formatted,
-      count: formatted.length
+      data: formatted
     });
   } catch (error) {
-    console.error('❌ Error in /api/articles/recommended:', error.message);
+    console.error('❌ Error:', error.message);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch recommended articles',
+      error: 'Failed to fetch article',
       message: error.message 
     });
   }
@@ -168,7 +234,7 @@ app.get('/api/articles/part/:part', async (req, res) => {
       article: article.Article === '0' ? 'Preamble' : `Article ${article.Article}`,
       title: article.Title,
       summary: article.Simplified_Description,
-      readTime: 5,
+      readTime: Math.ceil(article.Simplified_Description.split(' ').length / 200), // Calculate read time
       category: 'fundamental-rights',
       part: article.Part
     }));
@@ -180,56 +246,11 @@ app.get('/api/articles/part/:part', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error:', error.message);
-    res.status(500).json({ success: false, error: 'Failed to fetch articles' });
-  }
-});
-
-// Get single article
-app.get('/api/articles/:articleNumber', async (req, res) => {
-  console.log('🎯 /api/articles/:articleNumber endpoint was hit!');
-  try {
-    const { articleNumber } = req.params;
-    console.log(`📄 Searching for article: ${articleNumber}`);
-    
-    const article = await articlesCollection.findOne({ Article: articleNumber });
-
-    if (!article) {
-      console.log(`❌ Article ${articleNumber} not found`);
-      return res.status(404).json({ success: false, error: 'Article not found' });
-    }
-
-    console.log(`✅ Found article: ${article.Title}`);
-
-    const formatted = {
-      articleNumber: article.Article === '0' ? 'Preamble' : `Article ${article.Article}`,
-      articleName: article.Title,
-      part: {
-        number: 1,
-        name: article.Part,
-        category: 'fundamental-rights'
-      },
-      simplifiedDescription: article.Simplified_Description,
-      originalText: article.Original_Description || 'Not available',
-      keyPoints: article.Key_Points || [],
-      historicalContext: article.Historical_Context || 'Not available',
-      landmarkCases: (article.Landmark_Cases || []).map(c => ({
-        name: typeof c === 'string' ? c.split(':')[0].trim() : c.name || 'Unknown',
-        significance: typeof c === 'string' ? (c.split(':')[1] || '').trim() : c.significance || 'Unknown'
-      })),
-      relatedArticles: (article.Related_Articles || []).map(r => ({
-        number: typeof r === 'string' ? r : r.number || 'Unknown',
-        name: typeof r === 'string' ? r : r.name || 'Unknown'
-      })),
-      subject: article.Subject
-    };
-
-    res.json({
-      success: true,
-      data: formatted
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch articles',
+      message: error.message 
     });
-  } catch (error) {
-    console.error('❌ Error:', error.message);
-    res.status(500).json({ success: false, error: 'Failed to fetch article' });
   }
 });
 
@@ -241,7 +262,10 @@ app.get('/api/articles/search', async (req, res) => {
     console.log(`🔍 Searching for: ${q}`);
     
     if (!q) {
-      return res.status(400).json({ success: false, error: 'Search query required' });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Search query required' 
+      });
     }
 
     const regex = new RegExp(q, 'i');
@@ -250,7 +274,9 @@ app.get('/api/articles/search', async (req, res) => {
         $or: [
           { Title: { $regex: regex } },
           { Simplified_Description: { $regex: regex } },
-          { Article: { $regex: regex } }
+          { Article: { $regex: regex } },
+          { Subject: { $regex: regex } },
+          { Part: { $regex: regex } }
         ]
       })
       .limit(20)
@@ -263,8 +289,9 @@ app.get('/api/articles/search', async (req, res) => {
       article: article.Article === '0' ? 'Preamble' : `Article ${article.Article}`,
       title: article.Title,
       summary: article.Simplified_Description,
-      readTime: 5,
-      category: 'fundamental-rights'
+      readTime: Math.ceil(article.Simplified_Description.split(' ').length / 200),
+      category: 'fundamental-rights',
+      part: article.Part
     }));
 
     res.json({
@@ -274,7 +301,11 @@ app.get('/api/articles/search', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error:', error.message);
-    res.status(500).json({ success: false, error: 'Failed to search' });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to search',
+      message: error.message 
+    });
   }
 });
 
@@ -305,7 +336,6 @@ connectDB().then(() => {
     console.log('Available endpoints:');
     console.log('  GET /api/test');
     console.log('  GET /api/articles/parts');
-    console.log('  GET /api/articles/recommended');
     console.log('  GET /api/articles/:articleNumber');
     console.log('  GET /api/articles/part/:part');
     console.log('  GET /api/articles/search?q=...');

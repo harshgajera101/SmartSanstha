@@ -17,13 +17,13 @@
 
 
 
-
 import React, { useState } from 'react';
 import { Layout } from './components/layout/Layout';
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { ArticlePage } from './pages/ArticlePage';
+import { PartArticlesPage } from './pages/PartArticlesPage';
 import { LearnPage } from './components/learn/LearnPage';
 import { ExploreGames } from './components/games/ExploreGames';
 import { MemoryGame } from './components/games/MemoryGame/MemoryGame';
@@ -36,13 +36,13 @@ function App() {
   const [pageData, setPageData] = useState<any>(null);
 
   const handleNavigation = (page: string, data?: any) => {
-    console.log('🧭 Navigation called:', page, data); // Debug log
+    console.log('🧭 Navigation called:', page, data);
     setCurrentPage(page);
     setPageData(data || null);
   };
 
   const renderPage = () => {
-    console.log('📄 Rendering page:', currentPage, 'with data:', pageData); // Debug log
+    console.log('📄 Rendering page:', currentPage, 'with data:', pageData);
     
     switch (currentPage) {
       case 'home':
@@ -51,6 +51,8 @@ function App() {
         return <AboutPage />;
       case 'learn':
         return <LearnPage onNavigate={handleNavigation} />;
+      case 'part-articles':
+        return <PartArticlesPage onNavigate={handleNavigation} partData={pageData} />;
       case 'article':
         return <ArticlePage onNavigate={handleNavigation} articleData={pageData} />;
       case 'games':
