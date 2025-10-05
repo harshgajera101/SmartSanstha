@@ -13,6 +13,17 @@ export const GAMES: Game[] = [
     route: 'memory-game'
   },
   {
+    id: 'civic-city-builder',
+    title: 'Civic City Builder',
+    subtitle: 'Solve city problems with your duties',
+    description: 'Apply your Fundamental Duties to solve real-world civic problems and watch your city thrive. A game of strategy and responsibility.',
+    difficulty: 'medium',
+    estMinutes: 5,
+    icon: 'Building', 
+    isAvailable: true,
+    route: 'civic-city-builder',
+  },
+  {
     id: 'rights-duties',
     title: 'Rights vs. Duties',
     subtitle: 'Balance freedom and order in scenarios',
@@ -22,6 +33,17 @@ export const GAMES: Game[] = [
     icon: 'Scale',
     isAvailable: true,
     route: 'rights-duties-game'
+  },
+  {
+  id: 'jigsaw-puzzle',
+  title: 'Constitutional Jigsaw',
+  subtitle: 'Piece together constitutional knowledge',
+  description: 'Arrange puzzle pieces to complete images related to the Constitution and learn about each article.',
+  difficulty: 'medium',
+  estMinutes: 8,
+  icon: 'Puzzle', // Lucide icon
+  isAvailable: true, // Set to true to make it playable
+  route: 'jigsaw-puzzle'
   },
   {
     id: 'spin-wheel',
@@ -34,17 +56,7 @@ export const GAMES: Game[] = [
     isAvailable: false,
     route: 'spin-wheel'
   },
-  {
-    id: 'puzzle',
-    title: 'Constitutional Jigsaw',
-    subtitle: 'Piece together constitutional knowledge',
-    description: 'Arrange puzzle pieces to complete images related to the Constitution and learn about each article.',
-    difficulty: 'medium',
-    estMinutes: 8,
-    icon: 'Puzzle',
-    isAvailable: false,
-    route: 'jigsaw-puzzle'
-  },
+  
   {
     id: 'guess-article',
     title: 'Guess the Article',
