@@ -582,8 +582,6 @@
 
 
 
-
-
 import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, 
@@ -617,12 +615,10 @@ interface ArticlePageProps {
 }
 
 export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleData }) => {
-
-  // Add these debug logs at the very beginning
+  // Debug logs
   console.log('📄 ArticlePage mounted');
   console.log('📦 Article data received:', articleData);
   
-
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -681,13 +677,16 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
       if (response?.success && response?.data?.quiz) {
         setQuiz(response.data.quiz);
         setShowQuiz(true);
+        setCurrentQuestion(0);
+        setSelectedAnswers([]);
+        setShowResults(false);
         console.log('✅ Quiz generated with', response.data.quiz.length, 'questions');
       } else {
-        alert('Failed to generate quiz. Please try again.');
+        alert('Failed to generate quiz. This feature requires Google Gemini API configuration.');
       }
     } catch (err: any) {
       console.error('❌ Error generating quiz:', err);
-      alert('Failed to generate quiz. Please make sure Google API key is configured.');
+      alert('Quiz generation is not available yet. Please configure Google Gemini API in the backend.');
     } finally {
       setQuizLoading(false);
     }
@@ -716,7 +715,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
   const calculateScore = () => {
     let correct = 0;
     selectedAnswers.forEach((answer, index) => {
-      if (answer === quiz[index]?.correctAnswer) {
+      if (quiz[index] && answer === quiz[index].correctAnswer) {
         correct++;
       }
     });
@@ -806,6 +805,15 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                 {article.articleName}
               </h2>
+
+              {/* Subject Badge */}
+              {article.subject && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full">
+                  <span className="text-blue-400 text-sm font-medium">
+                    {article.subject}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -911,7 +919,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
             <h3 className="text-2xl font-bold text-white">Constitutional Text</h3>
           </div>
           <div className="bg-slate-900/50 border-l-4 border-orange-500 p-6 rounded-lg">
-            <p className="text-slate-200 text-xl leading-relaxed italic font-serif">
+            <p className="text-slate-200 text-xl leading-relaxed italic font-serif whitespace-pre-wrap">
               "{article.originalText}"
             </p>
           </div>
@@ -956,9 +964,11 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
               >
                 <h4 className="font-bold text-white text-lg mb-2 flex items-center gap-2">
                   <ChevronRight className="w-5 h-5 text-orange-400" />
-                  {case_.name || 'Unknown Case'}
+                  {case_.name}
                 </h4>
-                <p className="text-slate-400 ml-7">{case_.significance || 'No details available'}</p>
+                {case_.significance && (
+                  <p className="text-slate-400 ml-7">{case_.significance}</p>
+                )}
               </div>
             ))}
           </div>
@@ -976,15 +986,17 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {article.relatedArticles.map((related: any, index: number) => (
-              <button
+              <div
                 key={index}
                 className="p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700 transition-all text-left group border border-slate-600 hover:border-orange-500/50"
               >
                 <div className="font-bold text-orange-400 mb-1 group-hover:text-orange-300">
-                  {related.number || 'Unknown'}
+                  {related.number}
                 </div>
-                <div className="text-slate-300 text-sm group-hover:text-white">{related.name || 'Unknown'}</div>
-              </button>
+                <div className="text-slate-300 text-sm group-hover:text-white">
+                  {related.name}
+                </div>
+              </div>
             ))}
           </div>
         </Card>
@@ -992,26 +1004,176 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
 
       {/* Quiz Section */}
       <Card className="mb-8 bg-gradient-to-br from-slate-800 to-slate-900 border-orange-500/30">
-        <div className="text-center py-12">
-          <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <Brain className="w-10 h-10 text-white" />
+        {!showQuiz ? (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <Brain className="w-10 h-10 text-white" />
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-4">Test Your Knowledge</h3>
+            <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
+              Take a quick 5-question quiz to see how well you understood {article.articleNumber}
+            </p>
+            <Button
+              size="lg"
+              onClick={handleStartQuiz}
+              disabled={quizLoading}
+              icon={quizLoading ? <Loader className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
+            >
+              {quizLoading ? 'Generating Quiz...' : 'Start Quiz'}
+            </Button>
+            <p className="text-slate-500 text-sm mt-4">
+              Note: Quiz generation requires Google Gemini API configuration
+            </p>
           </div>
-          <h3 className="text-3xl font-bold text-white mb-4">Test Your Knowledge</h3>
-          <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
-            Take a quick 5-question quiz to see how well you understood {article.articleNumber}
-          </p>
-          <Button
-            size="lg"
-            onClick={handleStartQuiz}
-            disabled={quizLoading}
-            icon={quizLoading ? <Loader className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
-          >
-            {quizLoading ? 'Generating Quiz...' : 'Start Quiz'}
-          </Button>
-          <p className="text-slate-500 text-sm mt-4">
-            Note: Quiz generation requires Google Gemini API key
-          </p>
-        </div>
+        ) : !showResults ? (
+          <div className="animate-fade-in">
+            {/* Quiz Progress */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-slate-400 font-semibold">
+                  Question {currentQuestion + 1} of {quiz.length}
+                </span>
+                <span className="text-slate-400 font-semibold">
+                  {selectedAnswers.filter(a => a !== undefined).length}/{quiz.length} Answered
+                </span>
+              </div>
+              <ProgressBar
+                value={(currentQuestion + 1) / quiz.length * 100}
+                color="primary"
+              />
+            </div>
+
+            {/* Question */}
+            {quiz[currentQuestion] && (
+              <>
+                <div className="mb-8">
+                  <h4 className="text-2xl font-bold text-white mb-6 flex items-start gap-3">
+                    <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 text-sm">
+                      {currentQuestion + 1}
+                    </span>
+                    {quiz[currentQuestion].question}
+                  </h4>
+
+                  {/* Options */}
+                  <div className="space-y-3">
+                    {quiz[currentQuestion].options?.map((option: string, index: number) => (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswerSelect(index)}
+                        className={`w-full p-5 rounded-xl text-left transition-all border-2 ${
+                          selectedAnswers[currentQuestion] === index
+                            ? 'bg-orange-500 border-orange-400 text-white shadow-lg'
+                            : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            selectedAnswers[currentQuestion] === index
+                              ? 'border-white bg-white text-orange-500'
+                              : 'border-slate-500'
+                          }`}>
+                            {selectedAnswers[currentQuestion] === index && (
+                              <CheckCircle className="w-5 h-5" />
+                            )}
+                          </div>
+                          <span className="font-medium">{option}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <div className="flex justify-between items-center pt-6 border-t border-slate-700">
+                  <Button
+                    variant="outline"
+                    onClick={handlePreviousQuestion}
+                    disabled={currentQuestion === 0}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    onClick={handleNextQuestion}
+                    disabled={selectedAnswers[currentQuestion] === undefined}
+                  >
+                    {currentQuestion === quiz.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-12 animate-fade-in">
+            {/* Results */}
+            <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <Award className="w-12 h-12 text-white" />
+            </div>
+            <h3 className="text-4xl font-bold text-white mb-4">Quiz Complete!</h3>
+            <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 mb-2">
+              {calculateScore()}/{quiz.length}
+            </div>
+            <p className="text-slate-400 text-xl mb-8">
+              {calculateScore() === quiz.length
+                ? 'Perfect score! You mastered this article! 🏆'
+                : calculateScore() >= 3
+                ? 'Great job! You have a good understanding! 👏'
+                : 'Keep learning! Review the article and try again. 📚'}
+            </p>
+
+            {/* Detailed Results */}
+            <div className="max-w-3xl mx-auto mb-8 text-left space-y-4">
+              {quiz.map((question: any, index: number) => {
+                const isCorrect = selectedAnswers[index] === question.correctAnswer;
+                return (
+                  <Card key={index} className={`${isCorrect ? 'border-green-500/50' : 'border-red-500/50'}`}>
+                    <div className="flex items-start gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isCorrect ? 'bg-green-500' : 'bg-red-500'
+                      }`}>
+                        {isCorrect ? (
+                          <CheckCircle className="w-6 h-6 text-white" />
+                        ) : (
+                          <XCircle className="w-6 h-6 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="font-bold text-white mb-2">{question.question}</h5>
+                        <p className={`text-sm mb-2 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                          Your answer: {question.options?.[selectedAnswers[index]]}
+                        </p>
+                        {!isCorrect && (
+                          <p className="text-sm text-green-400 mb-2">
+                            Correct answer: {question.options?.[question.correctAnswer]}
+                          </p>
+                        )}
+                        {question.explanation && (
+                          <p className="text-slate-400 text-sm">{question.explanation}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-center">
+              <Button
+                variant="outline"
+                onClick={resetQuiz}
+                icon={<RotateCcw className="w-5 h-5" />}
+              >
+                Retake Quiz
+              </Button>
+              <Button
+                onClick={() => onNavigate('learn')}
+                icon={<BookOpen className="w-5 h-5" />}
+              >
+                Learn More Articles
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
