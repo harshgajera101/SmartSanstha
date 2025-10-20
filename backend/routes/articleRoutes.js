@@ -206,6 +206,9 @@ router.get('/part/:part', async (req, res) => {
     
     console.log(`📚 Found ${articles.length} articles for ${part}`);
 
+    // Get difficulty for this part
+    const partDifficulty = getDifficultyLevel(part);
+
     const formatted = articles.map(article => ({
       id: `article-${article.Article}`,
       article: article.Article === '0' ? 'Preamble' : `Article ${article.Article}`,
@@ -213,7 +216,8 @@ router.get('/part/:part', async (req, res) => {
       summary: article.Simplified_Description,
       readTime: Math.ceil(article.Simplified_Description.split(' ').length / 200),
       category: 'fundamental-rights',
-      part: article.Part
+      part: article.Part,
+      difficulty: partDifficulty // Add difficulty to each article
     }));
 
     res.json({

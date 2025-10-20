@@ -66,7 +66,6 @@
 
 
 
-
 import React from 'react';
 import { Clock, BookOpen, ArrowRight } from 'lucide-react';
 import { Card } from '../common/Card';
@@ -79,16 +78,25 @@ interface ArticleCardProps {
     summary: string;
     readTime: number;
     category: string;
+    difficulty?: string; // Add difficulty field
   };
   onNavigate: (page: string, data?: any) => void;
 }
 
 export const ArticleCard: React.FC<ArticleCardProps> = ({ article, onNavigate }) => {
-  const categoryColors: { [key: string]: string } = {
-    'fundamental-rights': 'from-blue-500 to-cyan-500',
-    'directive-principles': 'from-purple-500 to-pink-500',
-    'union': 'from-orange-500 to-red-500',
-    'other': 'from-green-500 to-emerald-500',
+  // Difficulty-based colors for book icon
+  const difficultyColors: { [key: string]: string } = {
+    'beginner': 'from-teal-500 to-emerald-600',
+    'intermediate': 'from-amber-400 to-orange-500',
+    'advanced': 'from-red-600 to-slate-700',
+  };
+
+  // Get the color based on difficulty, default to orange if not specified
+  const getIconColor = () => {
+    if (article.difficulty && difficultyColors[article.difficulty]) {
+      return difficultyColors[article.difficulty];
+    }
+    return 'from-orange-500 to-red-500'; // Default color
   };
 
   const handleClick = () => {
@@ -129,10 +137,8 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, onNavigate })
       className="group cursor-pointer h-full flex flex-col" 
       onClick={handleClick}
     >
-      {/* Icon - Fixed Height */}
-      <div className={`w-12 h-12 bg-gradient-to-br ${
-        categoryColors[article.category] || categoryColors['other']
-      } rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+      {/* Icon - Dynamic Color Based on Difficulty */}
+      <div className={`w-12 h-12 bg-gradient-to-br ${getIconColor()} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
         <BookOpen className="w-6 h-6 text-white" />
       </div>
       

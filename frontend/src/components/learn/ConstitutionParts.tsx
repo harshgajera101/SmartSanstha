@@ -146,9 +146,9 @@ export const ConstitutionParts: React.FC<ConstitutionPartsProps> = ({
   });
 
   const difficultyColors = {
-    beginner: 'from-green-500 to-emerald-500',
-    intermediate: 'from-yellow-500 to-orange-500',
-    advanced: 'from-red-500 to-pink-500',
+    beginner: 'from-teal-500 to-emerald-600',    
+    intermediate: 'from-amber-400 to-orange-500', 
+    advanced: 'from-red-600 to-slate-700',      
   };
 
   const categoryIcons: { [key: string]: React.ReactNode } = {
