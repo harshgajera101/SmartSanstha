@@ -122,6 +122,7 @@ export const articleAPI = {
   getArticlesByPart: (part: string) => api.get(`/articles/part/${encodeURIComponent(part)}`),
   getArticle: (articleNumber: string) => api.get(`/articles/${articleNumber}`),
   searchArticles: (query: string) => api.get('/articles/search', { params: { q: query } }),
+  getAllSubjects: () => api.get('/articles/subjects'), // New endpoint
 };
 
 // Chatbot APIs

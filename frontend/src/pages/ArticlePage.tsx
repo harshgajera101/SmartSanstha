@@ -1,11 +1,11 @@
 // import React, { useState } from 'react';
-// import { 
-//   BookOpen, 
-//   FileText, 
-//   Lightbulb, 
-//   Scale, 
-//   ChevronRight, 
-//   CheckCircle, 
+// import {
+//   BookOpen,
+//   FileText,
+//   Lightbulb,
+//   Scale,
+//   ChevronRight,
+//   CheckCircle,
 //   XCircle,
 //   Award,
 //   RotateCcw,
@@ -235,8 +235,8 @@
 //               <button
 //                 onClick={() => setIsBookmarked(!isBookmarked)}
 //                 className={`p-3 rounded-xl transition-all ${
-//                   isBookmarked 
-//                     ? 'bg-orange-500 text-white' 
+//                   isBookmarked
+//                     ? 'bg-orange-500 text-white'
 //                     : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
 //                 }`}
 //                 title={isBookmarked ? 'Remove bookmark' : 'Bookmark article'}
@@ -571,25 +571,15 @@
 //   );
 // };
 
-
-
-
-
-
-
-
-
-
-
-import React, { useState, useEffect } from 'react';
-import { 
-  BookOpen, 
-  FileText, 
-  Lightbulb, 
-  Scale, 
-  ChevronRight, 
+import React, { useState, useEffect } from "react";
+import {
+  BookOpen,
+  FileText,
+  Lightbulb,
+  Scale,
+  ChevronRight,
   ChevronLeft,
-  CheckCircle, 
+  CheckCircle,
   XCircle,
   Award,
   RotateCcw,
@@ -602,46 +592,51 @@ import {
   Brain,
   Target,
   Loader,
-  AlertCircle
-} from 'lucide-react';
-import { Card } from '../components/common/Card';
-import { Button } from '../components/common/Button';
-import { ProgressBar } from '../components/common/ProgressBar';
-import { articleAPI, quizAPI } from '../services/api';
+  AlertCircle,
+} from "lucide-react";
+import { Card } from "../components/common/Card";
+import { Button } from "../components/common/Button";
+import { ProgressBar } from "../components/common/ProgressBar";
+import { articleAPI, quizAPI } from "../services/api";
 
 interface ArticlePageProps {
   onNavigate: (page: string, data?: any) => void;
-  articleData?: { 
+  articleData?: {
     articleNumber: string;
     allArticles?: any[]; // All articles in the current part
     currentIndex?: number; // Current article index in the part
-    partName?: string;     // Add this
-    partTitle?: string;    // Add this
+    partName?: string; // Add this
+    partTitle?: string; // Add this
   };
 }
 
-export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleData }) => {
-  console.log('📄 ArticlePage mounted');
-  console.log('📦 Article data received:', articleData);
+export const ArticlePage: React.FC<ArticlePageProps> = ({
+  onNavigate,
+  articleData,
+}) => {
+  console.log("📄 ArticlePage mounted");
+  console.log("📦 Article data received:", articleData);
 
-//   useEffect(() => {
-//   console.log('📦 ArticlePage received data:');
-//   console.log('  - articleNumber:', articleData?.articleNumber);
-//   console.log('  - allArticles:', articleData?.allArticles);
-//   console.log('  - currentIndex:', articleData?.currentIndex);
-  
-//   if (articleData?.allArticles) {
-//     console.log('📚 All articles in this part:');
-//     articleData.allArticles.forEach((art: any, idx: number) => {
-//       console.log(`  ${idx}: ${art.article} - ${art.title}`);
-//     });
-//   }
-// }, [articleData]);
-  
+  //   useEffect(() => {
+  //   console.log('📦 ArticlePage received data:');
+  //   console.log('  - articleNumber:', articleData?.articleNumber);
+  //   console.log('  - allArticles:', articleData?.allArticles);
+  //   console.log('  - currentIndex:', articleData?.currentIndex);
+
+  //   if (articleData?.allArticles) {
+  //     console.log('📚 All articles in this part:');
+  //     articleData.allArticles.forEach((art: any, idx: number) => {
+  //       console.log(`  ${idx}: ${art.article} - ${art.title}`);
+  //     });
+  //   }
+  // }, [articleData]);
+
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'simplified' | 'original'>('simplified');
+  const [activeTab, setActiveTab] = useState<"simplified" | "original">(
+    "simplified"
+  );
   const [showQuiz, setShowQuiz] = useState(false);
   const [quiz, setQuiz] = useState<any[]>([]);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -657,14 +652,14 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
   useEffect(() => {
     if (articleData?.articleNumber) {
       fetchArticle(articleData.articleNumber);
-      
+
       // Set up navigation data if provided
       if (articleData.allArticles) {
         setAllArticles(articleData.allArticles);
         setCurrentIndex(articleData.currentIndex || 0);
       }
     } else {
-      setError('No article number provided');
+      setError("No article number provided");
       setLoading(false);
     }
   }, [articleData]);
@@ -674,23 +669,23 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
       setLoading(true);
       setError(null);
       console.log(`📄 Fetching article ${articleNumber}...`);
-      
+
       const response: any = await articleAPI.getArticle(articleNumber);
-      
-      console.log('Response received:', response);
-      
+
+      console.log("Response received:", response);
+
       if (response?.success) {
         setArticle(response.data);
-        console.log('✅ Article loaded:', response.data.articleName);
-        
+        console.log("✅ Article loaded:", response.data.articleName);
+
         // Scroll to top when new article loads
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        setError('Failed to load article data');
+        setError("Failed to load article data");
       }
     } catch (err: any) {
-      console.error('❌ Error fetching article:', err);
-      setError('Failed to load article. Please try again.');
+      console.error("❌ Error fetching article:", err);
+      setError("Failed to load article. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -699,13 +694,13 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
   const handlePreviousArticle = () => {
     if (currentIndex > 0) {
       const prevArticle = allArticles[currentIndex - 1];
-      console.log('⬅️ Going to previous article:', prevArticle);
-      
+      console.log("⬅️ Going to previous article:", prevArticle);
+
       // Extract article number
-      let articleNumber = '';
-      
-      if (prevArticle.article === 'Preamble') {
-        articleNumber = '0';
+      let articleNumber = "";
+
+      if (prevArticle.article === "Preamble") {
+        articleNumber = "0";
       } else {
         const match = prevArticle.article?.match(/Article\s+(\d+)/);
         if (match) {
@@ -717,20 +712,20 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
           }
         }
       }
-      
-      console.log('🔢 Extracted article number:', articleNumber);
-      
+
+      console.log("🔢 Extracted article number:", articleNumber);
+
       if (articleNumber) {
-        onNavigate('article', {
+        onNavigate("article", {
           articleNumber,
           allArticles: allArticles,
           currentIndex: currentIndex - 1,
-          partName: articleData?.partName,      // Preserve part info
-          partTitle: articleData?.partTitle     // Preserve part info
+          partName: articleData?.partName, // Preserve part info
+          partTitle: articleData?.partTitle, // Preserve part info
         });
       } else {
-        console.error('❌ Could not extract article number from:', prevArticle);
-        alert('Unable to navigate to previous article');
+        console.error("❌ Could not extract article number from:", prevArticle);
+        alert("Unable to navigate to previous article");
       }
     }
   };
@@ -738,13 +733,13 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
   const handleNextArticle = () => {
     if (currentIndex < allArticles.length - 1) {
       const nextArticle = allArticles[currentIndex + 1];
-      console.log('➡️ Going to next article:', nextArticle);
-      
+      console.log("➡️ Going to next article:", nextArticle);
+
       // Extract article number
-      let articleNumber = '';
-      
-      if (nextArticle.article === 'Preamble') {
-        articleNumber = '0';
+      let articleNumber = "";
+
+      if (nextArticle.article === "Preamble") {
+        articleNumber = "0";
       } else {
         const match = nextArticle.article?.match(/Article\s+(\d+)/);
         if (match) {
@@ -756,20 +751,20 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
           }
         }
       }
-      
-      console.log('🔢 Extracted article number:', articleNumber);
-      
+
+      console.log("🔢 Extracted article number:", articleNumber);
+
       if (articleNumber) {
-        onNavigate('article', {
+        onNavigate("article", {
           articleNumber,
           allArticles: allArticles,
           currentIndex: currentIndex + 1,
-          partName: articleData?.partName,      // Preserve part info
-          partTitle: articleData?.partTitle     // Preserve part info
+          partName: articleData?.partName, // Preserve part info
+          partTitle: articleData?.partTitle, // Preserve part info
         });
       } else {
-        console.error('❌ Could not extract article number from:', nextArticle);
-        alert('Unable to navigate to next article');
+        console.error("❌ Could not extract article number from:", nextArticle);
+        alert("Unable to navigate to next article");
       }
     }
   };
@@ -777,26 +772,36 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
   const handleStartQuiz = async () => {
     try {
       setQuizLoading(true);
-      console.log(`🎯 Generating quiz for article ${articleData?.articleNumber}...`);
-      
+      console.log(
+        `🎯 Generating quiz for article ${articleData?.articleNumber}...`
+      );
+
       const response: any = await quizAPI.generateFromArticle(
-        articleData?.articleNumber || '0',
+        articleData?.articleNumber || "0",
         5
       );
-      
+
       if (response?.success && response?.data?.quiz) {
         setQuiz(response.data.quiz);
         setShowQuiz(true);
         setCurrentQuestion(0);
         setSelectedAnswers([]);
         setShowResults(false);
-        console.log('✅ Quiz generated with', response.data.quiz.length, 'questions');
+        console.log(
+          "✅ Quiz generated with",
+          response.data.quiz.length,
+          "questions"
+        );
       } else {
-        alert('Failed to generate quiz. This feature requires Google Gemini API configuration.');
+        alert(
+          "Failed to generate quiz. This feature requires Google Gemini API configuration."
+        );
       }
     } catch (err: any) {
-      console.error('❌ Error generating quiz:', err);
-      alert('Quiz generation is not available yet. Please configure Google Gemini API in the backend.');
+      console.error("❌ Error generating quiz:", err);
+      alert(
+        "Quiz generation is not available yet. Please configure Google Gemini API in the backend."
+      );
     } finally {
       setQuizLoading(false);
     }
@@ -810,7 +815,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
 
   const handleNextQuestion = () => {
     if (currentQuestion < quiz.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
+      setCurrentQuestion((prev) => prev + 1);
     } else {
       setShowResults(true);
     }
@@ -818,26 +823,26 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
 
   const handlePreviousQuestion = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
+      setCurrentQuestion((prev) => prev - 1);
     }
   };
 
   const handleBackToPart = () => {
     // Navigate back to the part articles page
     if (articleData?.partName && articleData?.partTitle) {
-      onNavigate('part-articles', {
+      onNavigate("part-articles", {
         partName: articleData.partName,
-        partTitle: articleData.partTitle
+        partTitle: articleData.partTitle,
       });
     } else if (article?.part?.name) {
       // Fallback to article's part name if not provided
-      onNavigate('part-articles', {
+      onNavigate("part-articles", {
         partName: article.part.name,
-        partTitle: article.part.name
+        partTitle: article.part.name,
       });
     } else {
       // If no part info, go to learn page
-      onNavigate('learn');
+      onNavigate("learn");
     }
   };
 
@@ -860,12 +865,66 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      'fundamental-rights': 'from-blue-500 to-cyan-500',
-      'directive-principles': 'from-purple-500 to-pink-500',
-      'union': 'from-orange-500 to-red-500',
-      'other': 'from-green-500 to-emerald-500',
+      "fundamental-rights": "from-blue-500 to-cyan-500",
+      "directive-principles": "from-purple-500 to-pink-500",
+      union: "from-orange-500 to-red-500",
+      other: "from-green-500 to-emerald-500",
     };
-    return colors[category] || 'from-orange-500 to-red-500';
+    return colors[category] || "from-orange-500 to-red-500";
+  };
+
+  const extractArticleNumberFromRelated = (
+    relatedNumber: string
+  ): string | null => {
+    console.log("🔍 Extracting article number from:", relatedNumber);
+
+    // Handle "Preamble"
+    if (relatedNumber.toLowerCase().includes("preamble")) {
+      return "0";
+    }
+
+    // Extract from "Article X" format
+    const articleMatch = relatedNumber.match(/Article\s+(\d+[A-Za-z]*)/i);
+    if (articleMatch) {
+      return articleMatch[1];
+    }
+
+    // Extract from "Part III (Articles X-Y)" format
+    const partMatch = relatedNumber.match(
+      /Part\s+[IVXLCDM]+\s*\(Articles?\s+(\d+)/i
+    );
+    if (partMatch) {
+      return partMatch[1];
+    }
+
+    // If it's just a number
+    if (/^\d+[A-Za-z]*$/.test(relatedNumber.trim())) {
+      return relatedNumber.trim();
+    }
+
+    console.warn("⚠️ Could not extract article number from:", relatedNumber);
+    return null;
+  };
+
+  const handleRelatedArticleClick = async (related: any) => {
+    console.log("🎯 Related article clicked:", related);
+
+    const articleNumber = extractArticleNumberFromRelated(related.number);
+
+    if (!articleNumber) {
+      alert("Unable to navigate to this article. Invalid article reference.");
+      return;
+    }
+
+    console.log("🔢 Navigating to article:", articleNumber);
+
+    // Check if we need to fetch new articles list or if it's in current part
+    // For now, navigate without the full articles list (user can use back button to return)
+    onNavigate("article", {
+      articleNumber: articleNumber,
+      // Don't pass allArticles if navigating to a different part
+      // User will need to go back to part page for navigation controls
+    });
   };
 
   if (loading) {
@@ -882,11 +941,13 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
       <div className="w-full max-w-6xl animate-fade-in">
         <Card className="text-center py-16 border-red-500/50">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-4">Article Not Found</h2>
-          <p className="text-slate-400 mb-6">{error || 'The requested article could not be found.'}</p>
-          <Button onClick={handleBackToPart}>
-            Back to Part
-          </Button>
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Article Not Found
+          </h2>
+          <p className="text-slate-400 mb-6">
+            {error || "The requested article could not be found."}
+          </p>
+          <Button onClick={handleBackToPart}>Back to Part</Button>
         </Card>
       </div>
     );
@@ -905,7 +966,9 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
         className="flex items-center gap-2 text-slate-400 hover:text-orange-400 transition-colors mb-6 group"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span>Back to {articleData?.partTitle || article?.part?.name || 'Part'}</span>
+        <span>
+          Back to {articleData?.partTitle || article?.part?.name || "Part"}
+        </span>
       </button>
 
       {/* Header Section */}
@@ -918,20 +981,26 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full mb-4">
                 <BookMarked className="w-4 h-4 text-orange-400" />
                 <span className="text-orange-400 font-semibold text-sm">
-                  {article.part?.name || 'Unknown Part'}
+                  {article.part?.name || "Unknown Part"}
                 </span>
               </div>
 
               {/* Article Number */}
               <div className="flex items-center gap-4 mb-4">
-                <div className={`w-16 h-16 bg-gradient-to-br ${getCategoryColor(article.part?.category || 'other')} rounded-2xl flex items-center justify-center shadow-lg`}>
+                <div
+                  className={`w-16 h-16 bg-gradient-to-br ${getCategoryColor(
+                    article.part?.category || "other"
+                  )} rounded-2xl flex items-center justify-center shadow-lg`}
+                >
                   <Scale className="w-8 h-8 text-white" />
                 </div>
                 <div>
                   <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
                     {article.articleNumber}
                   </h1>
-                  <p className="text-slate-400 text-sm mt-1">Indian Constitution</p>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Indian Constitution
+                  </p>
                 </div>
               </div>
 
@@ -955,13 +1024,15 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
               <button
                 onClick={() => setIsBookmarked(!isBookmarked)}
                 className={`p-3 rounded-xl transition-all ${
-                  isBookmarked 
-                    ? 'bg-orange-500 text-white' 
-                    : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                  isBookmarked
+                    ? "bg-orange-500 text-white"
+                    : "bg-slate-700 text-slate-400 hover:bg-slate-600"
                 }`}
-                title={isBookmarked ? 'Remove bookmark' : 'Bookmark article'}
+                title={isBookmarked ? "Remove bookmark" : "Bookmark article"}
               >
-                <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
+                <Bookmark
+                  className={`w-5 h-5 ${isBookmarked ? "fill-current" : ""}`}
+                />
               </button>
               <button
                 className="p-3 bg-slate-700 text-slate-400 rounded-xl hover:bg-slate-600 transition-all"
@@ -973,6 +1044,81 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
           </div>
         </Card>
       </div>
+
+      {/* Content Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setActiveTab("simplified")}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+            activeTab === "simplified"
+              ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+              : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+          }`}
+        >
+          <Lightbulb className="w-5 h-5" />
+          Simplified Explanation
+        </button>
+        <button
+          onClick={() => setActiveTab("original")}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+            activeTab === "original"
+              ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+              : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+          }`}
+        >
+          <FileText className="w-5 h-5" />
+          Original Text
+        </button>
+      </div>
+
+      {/* Content Area */}
+      {activeTab === "simplified" ? (
+        <Card className="mb-8 animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+              <Lightbulb className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white">
+              Easy to Understand
+            </h3>
+          </div>
+          <div className="prose prose-invert max-w-none">
+            {article.simplifiedDescription
+              ?.split("\n\n")
+              .map((paragraph: string, index: number) => (
+                <p
+                  key={index}
+                  className="text-slate-300 leading-relaxed mb-4 text-lg"
+                >
+                  {paragraph}
+                </p>
+              ))}
+          </div>
+        </Card>
+      ) : (
+        <Card className="mb-8 animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white">
+              Constitutional Text
+            </h3>
+          </div>
+          <div className="bg-slate-900/50 border-l-4 border-orange-500 p-6 rounded-lg">
+            <p className="text-slate-200 text-xl leading-relaxed italic font-serif whitespace-pre-wrap">
+              "{article.originalText}"
+            </p>
+          </div>
+          <div className="mt-4 flex items-start gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <p className="text-blue-200 text-sm">
+              This is the exact text as written in the Constitution of India.
+              The simplified version explains this in everyday language.
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* Key Points */}
       {article.keyPoints && article.keyPoints.length > 0 && (
@@ -1001,85 +1147,23 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
         </Card>
       )}
 
-      {/* Content Tabs */}
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => setActiveTab('simplified')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-            activeTab === 'simplified'
-              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-          }`}
-        >
-          <Lightbulb className="w-5 h-5" />
-          Simplified Explanation
-        </button>
-        <button
-          onClick={() => setActiveTab('original')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-            activeTab === 'original'
-              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-          }`}
-        >
-          <FileText className="w-5 h-5" />
-          Original Text
-        </button>
-      </div>
-
-      {/* Content Area */}
-      {activeTab === 'simplified' ? (
-        <Card className="mb-8 animate-fade-in">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-              <Lightbulb className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white">Easy to Understand</h3>
-          </div>
-          <div className="prose prose-invert max-w-none">
-            {article.simplifiedDescription?.split('\n\n').map((paragraph: string, index: number) => (
-              <p key={index} className="text-slate-300 leading-relaxed mb-4 text-lg">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </Card>
-      ) : (
-        <Card className="mb-8 animate-fade-in">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white">Constitutional Text</h3>
-          </div>
-          <div className="bg-slate-900/50 border-l-4 border-orange-500 p-6 rounded-lg">
-            <p className="text-slate-200 text-xl leading-relaxed italic font-serif whitespace-pre-wrap">
-              "{article.originalText}"
-            </p>
-          </div>
-          <div className="mt-4 flex items-start gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-            <p className="text-blue-200 text-sm">
-              This is the exact text as written in the Constitution of India. The simplified version explains this in everyday language.
-            </p>
-          </div>
-        </Card>
-      )}
-
       {/* Historical Context */}
-      {article.historicalContext && article.historicalContext !== 'Not available' && (
-        <Card className="mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
+      {article.historicalContext &&
+        article.historicalContext !== "Not available" && (
+          <Card className="mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white">
+                Historical Context
+              </h3>
             </div>
-            <h3 className="text-2xl font-bold text-white">Historical Context</h3>
-          </div>
-          <p className="text-slate-300 leading-relaxed text-lg">
-            {article.historicalContext}
-          </p>
-        </Card>
-      )}
+            <p className="text-slate-300 leading-relaxed text-lg">
+              {article.historicalContext}
+            </p>
+          </Card>
+        )}
 
       {/* Landmark Cases */}
       {article.landmarkCases && article.landmarkCases.length > 0 && (
@@ -1109,7 +1193,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
         </Card>
       )}
 
-      {/* Related Articles */}
+      {/* Related Articles - UPDATED WITH CLICK HANDLERS */}
       {article.relatedArticles && article.relatedArticles.length > 0 && (
         <Card className="mb-8">
           <div className="flex items-center gap-3 mb-6">
@@ -1120,17 +1204,25 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {article.relatedArticles.map((related: any, index: number) => (
-              <div
+              <button
                 key={index}
-                className="p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700 transition-all text-left group border border-slate-600 hover:border-orange-500/50"
+                onClick={() => handleRelatedArticleClick(related)}
+                className="p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700 transition-all text-left group border border-slate-600 hover:border-orange-500/50 cursor-pointer"
               >
-                <div className="font-bold text-orange-400 mb-1 group-hover:text-orange-300">
-                  {related.number}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-bold text-orange-400 group-hover:text-orange-300 transition-colors">
+                    {related.number}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-orange-400 transition-colors" />
                 </div>
-                <div className="text-slate-300 text-sm group-hover:text-white">
+                <div className="text-slate-300 text-sm group-hover:text-white transition-colors">
                   {related.name}
                 </div>
-              </div>
+                <div className="mt-2 text-xs text-slate-500 group-hover:text-slate-400 flex items-center gap-1">
+                  <span>Click to view</span>
+                  <span>→</span>
+                </div>
+              </button>
             ))}
           </div>
         </Card>
@@ -1146,8 +1238,8 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
               disabled={!hasPrevious}
               className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all border-2 ${
                 hasPrevious
-                  ? 'border-orange-500 text-orange-400 hover:bg-orange-500/10'
-                  : 'border-slate-700 text-slate-600 cursor-not-allowed'
+                  ? "border-orange-500 text-orange-400 hover:bg-orange-500/10"
+                  : "border-slate-700 text-slate-600 cursor-not-allowed"
               }`}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -1160,7 +1252,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
                 Article {currentIndex + 1} of {allArticles.length}
               </div>
               <div className="text-slate-500 text-sm mt-1">
-                {article.part?.name || 'Constitution'}
+                {article.part?.name || "Constitution"}
               </div>
             </div>
 
@@ -1170,8 +1262,8 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
               disabled={!hasNext}
               className={`flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all ${
                 hasNext
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-lg'
-                  : 'bg-slate-700 text-slate-600 cursor-not-allowed'
+                  ? "bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-lg"
+                  : "bg-slate-700 text-slate-600 cursor-not-allowed"
               }`}
             >
               <span>Next</span>
@@ -1184,7 +1276,9 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
             <div className="w-full bg-slate-800 rounded-full h-2">
               <div
                 className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${((currentIndex + 1) / allArticles.length) * 100}%` }}
+                style={{
+                  width: `${((currentIndex + 1) / allArticles.length) * 100}%`,
+                }}
               />
             </div>
           </div>
