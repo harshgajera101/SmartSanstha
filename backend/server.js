@@ -83,6 +83,7 @@ app.get('/api/test', (req, res) => {
 });
 
 // Get all parts with articles
+// Update the /api/articles/parts endpoint to include subject-based categorization
 app.get('/api/articles/parts', async (req, res) => {
   console.log('🎯 /api/articles/parts endpoint was hit!');
   try {
@@ -104,7 +105,7 @@ app.get('/api/articles/parts', async (req, res) => {
           description: `Learn about ${partName} of the Indian Constitution`,
           articles: [],
           totalArticles: 0,
-          category: 'fundamental-rights', // You can categorize based on Part later
+          subjects: new Set(), // Track unique subjects in this part
           difficulty: 'beginner'
         });
       }
@@ -112,16 +113,36 @@ app.get('/api/articles/parts', async (req, res) => {
       // Add article to this part
       partsMap.get(partName).articles.push({
         article: article.Article,
-        title: article.Title
+        title: article.Title,
+        subject: article.Subject
       });
       partsMap.get(partName).totalArticles++;
+      
+      // Add subject to the set
+      if (article.Subject) {
+        partsMap.get(partName).subjects.add(article.Subject);
+      }
     });
 
-    // Convert to array and sort by part number
-    const parts = Array.from(partsMap.values()).sort((a, b) => a.partNumber - b.partNumber);
+    // Convert to array and process
+    const parts = Array.from(partsMap.values()).map(part => {
+      // Convert Set to Array for subjects
+      const subjectsArray = Array.from(part.subjects);
+      
+      // Determine primary subject (most common one)
+      const primarySubject = subjectsArray.length > 0 ? subjectsArray[0] : 'Other';
+      
+      return {
+        ...part,
+        subjects: subjectsArray,
+        primarySubject: primarySubject,
+        // Remove the Set object before sending
+        subjects: undefined
+      };
+    }).sort((a, b) => a.partNumber - b.partNumber);
     
     console.log(`📦 Returning ${parts.length} parts`);
-    console.log('Parts:', parts.map(p => `${p.title} (${p.totalArticles} articles)`));
+    console.log('Parts with subjects:', parts.map(p => `${p.title} (${p.primarySubject})`));
     
     res.json({
       success: true,
@@ -137,6 +158,31 @@ app.get('/api/articles/parts', async (req, res) => {
     });
   }
 });
+
+// Add this new endpoint after the existing routes
+app.get('/api/articles/subjects', async (req, res) => {
+  console.log('🎯 /api/articles/subjects endpoint was hit!');
+  try {
+    // Get all unique subjects from the database
+    const subjects = await articlesCollection.distinct('Subject');
+    
+    console.log(`📋 Found ${subjects.length} unique subjects:`, subjects);
+    
+    res.json({
+      success: true,
+      data: subjects,
+      count: subjects.length
+    });
+  } catch (error) {
+    console.error('❌ Error in /api/articles/subjects:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch subjects',
+      message: error.message 
+    });
+  }
+});
+
 
 // Get single article by article number
 app.get('/api/articles/:articleNumber', async (req, res) => {
@@ -318,6 +364,8 @@ app.use((req, res) => {
     path: req.url 
   });
 });
+
+
 
 // =================================================================
 // START SERVER
