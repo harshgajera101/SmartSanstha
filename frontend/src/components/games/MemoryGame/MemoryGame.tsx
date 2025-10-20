@@ -41,11 +41,11 @@ export const MemoryGame: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: number;
     if (isGameActive) {
-      interval = setInterval(() => setTimeElapsed((prev) => prev + 1), 1000);
+      interval = window.setInterval(() => setTimeElapsed((prev) => prev + 1), 1000);
     }
-    return () => clearInterval(interval);
+    return () => window.clearInterval(interval);
   }, [isGameActive]);
 
   useEffect(() => {
