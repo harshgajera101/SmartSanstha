@@ -974,33 +974,6 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
         </Card>
       </div>
 
-      {/* Key Points */}
-      {article.keyPoints && article.keyPoints.length > 0 && (
-        <Card className="mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white">Key Points</h3>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            {article.keyPoints.map((point: string, index: number) => (
-              <div
-                key={index}
-                className="flex items-start gap-3 p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700 transition-colors group"
-              >
-                <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <CheckCircle className="w-4 h-4 text-white" />
-                </div>
-                <p className="text-slate-300 text-sm leading-relaxed group-hover:text-white transition-colors">
-                  {point}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
       {/* Content Tabs */}
       <div className="flex gap-2 mb-6">
         <button
@@ -1062,6 +1035,33 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ onNavigate, articleDat
             <p className="text-blue-200 text-sm">
               This is the exact text as written in the Constitution of India. The simplified version explains this in everyday language.
             </p>
+          </div>
+        </Card>
+      )}
+
+      {/* Key Points */}
+      {article.keyPoints && article.keyPoints.length > 0 && (
+        <Card className="mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white">Key Points</h3>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            {article.keyPoints.map((point: string, index: number) => (
+              <div
+                key={index}
+                className="flex items-start gap-3 p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700 transition-colors group"
+              >
+                <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <CheckCircle className="w-4 h-4 text-white" />
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed group-hover:text-white transition-colors">
+                  {point}
+                </p>
+              </div>
+            ))}
           </div>
         </Card>
       )}
