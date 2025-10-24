@@ -4,7 +4,7 @@
 
 SmartSanstha is an advanced web application that leverages cutting-edge AI and machine learning to make learning about the Indian Constitution engaging, personalized, and accessible. Through gamification, 3D simulations, adaptive learning, and AI-powered assistance, we're revolutionizing constitutional education.
 
-![SmartSanstha Banner](./public/banner.png)
+<img width="1470" height="796" alt="Screenshot 2025-10-24 at 5 13 07 PM" src="https://github.com/user-attachments/assets/74882438-22dc-4efd-9c2c-bb9a1c269c95" />
 
 ---
 
