@@ -6,6 +6,14 @@ SmartSanstha is an advanced web application that leverages cutting-edge AI and m
 
 <img width="1470" height="796" alt="Screenshot 2025-10-24 at 5 13 07 PM" src="https://github.com/user-attachments/assets/74882438-22dc-4efd-9c2c-bb9a1c269c95" />
 
+![TypeScript](https://img.shields.io/badge/TypeScript-91.0%25-3178c6?logo=typescript&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-5.7%25-f7df1e?logo=javascript&logoColor=black)
+![CSS](https://img.shields.io/badge/CSS-3.2%25-1572b6?logo=css3&logoColor=white)
+![HTML](https://img.shields.io/badge/HTML-0.1%25-e34f26?logo=html5&logoColor=white)
+![React](https://img.shields.io/badge/React-19.1.1-61dafb?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-7.1.2-646cff?logo=vite&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+
 ---
 
 ## 📋 Table of Contents
