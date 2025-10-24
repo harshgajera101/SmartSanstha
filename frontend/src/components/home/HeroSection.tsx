@@ -54,7 +54,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
             <div className="text-sm text-slate-400 mt-1">Constitution Parts</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">470</div>
+            <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">465</div>
             <div className="text-sm text-slate-400 mt-1">Articles to Learn</div>
           </div>
           <div className="text-center">

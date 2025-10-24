@@ -339,7 +339,7 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                       <Brain className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-white mb-2">10</div>
+                  <div className="text-3xl font-bold text-white mb-2">5</div>
                   <div className="text-slate-400 text-sm">Quiz Questions</div>
                 </div>
 
