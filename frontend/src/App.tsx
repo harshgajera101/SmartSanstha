@@ -13,6 +13,7 @@ import  CivicCityBuilder  from './components/games/CivicCityBuilder/CivicCityBui
 import JigsawPuzzle from './components/games/JigsawPuzzle/JigsawPuzzle'; 
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ChatbotFloating } from './components/chatbot/ChatbotFloating';
+import { CourtSimulationPage } from './pages/CourtSimulationPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -52,6 +53,9 @@ function App() {
         return <Dashboard />;
       case 'contact':
         return <ContactPage />;
+      // Add to your navigation handling
+      case 'court-simulation':
+        return <CourtSimulationPage onNavigate={handleNavigation} />;
       default:
         return <HomePage onNavigate={handleNavigation} />;
     }

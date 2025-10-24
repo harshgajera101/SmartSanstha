@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Menu, X, Home, BookMarked, Gamepad2, User, BarChart3, Mail } from 'lucide-react';
+import { BookOpen, Menu, X, Home, BookMarked, Gamepad2, User, BarChart3, Mail, Scale, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   currentPage: string;
@@ -91,6 +91,32 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             {navItems.map(item => (
               <NavLink key={item.id} item={item} />
             ))}
+            
+            {/* Special Court Simulation Button */}
+            <button
+              onClick={() => {
+                onNavigate('court-simulation');
+                setIsMenuOpen(false);
+              }}
+              className={`
+                relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 overflow-hidden group
+                ${currentPage === 'court-simulation'
+                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg'
+                  : 'bg-slate-800 text-slate-300 hover:text-white border border-orange-500/30 hover:border-orange-500'
+                }
+              `}
+            >
+              <span className="flex items-center gap-2 relative z-10">
+                <Scale className="w-4 h-4" />
+                Court
+                {currentPage !== 'court-simulation' && (
+                  <Sparkles className="w-3 h-3 text-orange-400 animate-pulse" />
+                )}
+              </span>
+              {currentPage !== 'court-simulation' && (
+                <span className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              )}
+            </button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -110,6 +136,29 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             {navItems.map(item => (
               <MobileNavLink key={item.id} item={item} />
             ))}
+            
+            {/* Special Court Simulation Button - Mobile */}
+            <button
+              onClick={() => {
+                onNavigate('court-simulation');
+                setIsMenuOpen(false);
+              }}
+              className={`
+                w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-300
+                ${currentPage === 'court-simulation'
+                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                  : 'bg-slate-800 text-slate-300 border border-orange-500/30 hover:border-orange-500 hover:text-white'
+                }
+              `}
+            >
+              <Scale className="w-5 h-5" />
+              <span className="flex-1 text-left">Virtual Courtroom</span>
+              {currentPage !== 'court-simulation' && (
+                <span className="px-2 py-0.5 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-400 text-xs font-semibold">
+                  NEW
+                </span>
+              )}
+            </button>
           </nav>
         </div>
       )}

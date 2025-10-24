@@ -5,6 +5,7 @@ import { connectDB } from './config/database.js';
 import articleRoutes from './routes/articleRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
+import courtRoutes from './routes/courtRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -53,6 +54,7 @@ app.get('/api/test', (req, res) => {
 app.use('/api/articles', articleRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/quiz', quizRoutes);
+app.use('/api/court', courtRoutes);
 
 // 404 handler
 app.use((req, res) => {
