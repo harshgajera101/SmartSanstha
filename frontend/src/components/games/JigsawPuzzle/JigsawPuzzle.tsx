@@ -2,6 +2,10 @@ import React, { useState, useEffect, CSSProperties } from 'react';
 import { ProgressBar } from '../../common/ProgressBar';
 
 // --- TYPES ---
+interface JigsawPuzzleProps {
+  onNavigate: (page: string) => void;
+}
+
 interface PuzzleData {
   id: string;
   name: string;
@@ -133,7 +137,7 @@ const HowToPlay = () => (
 );
 
 // --- MAIN COMPONENT ---
-const JigsawPuzzle: React.FC = () => {
+const JigsawPuzzle: React.FC<JigsawPuzzleProps> = ({ onNavigate }) => {
   const [currentPuzzle, setCurrentPuzzle] = useState<PuzzleData>(puzzles[0]);
   const [piecesInTray, setPiecesInTray] = useState<Piece[]>([]);
   const [boardState, setBoardState] = useState<(Piece | null)[]>([]);
@@ -164,7 +168,6 @@ const JigsawPuzzle: React.FC = () => {
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLImageElement>, pieceId: string) => {
-    // use a key 'pieceId' to store the id (same when reading)
     try { e.dataTransfer.setData('text/plain', pieceId); } catch (err) { e.dataTransfer.setData('pieceId', pieceId); }
   };
 
@@ -176,7 +179,7 @@ const JigsawPuzzle: React.FC = () => {
     e.preventDefault();
     setDraggedOverZone(null);
     let pieceId = e.dataTransfer.getData('text/plain');
-    if (!pieceId) pieceId = e.dataTransfer.getData('pieceId'); // fallback for older approach
+    if (!pieceId) pieceId = e.dataTransfer.getData('pieceId');
     const correctPieceId = `piece-${zoneIndex + 1}`;
 
     if (pieceId === correctPieceId && !boardState[zoneIndex]) {
@@ -217,6 +220,23 @@ const JigsawPuzzle: React.FC = () => {
   return (
     <div style={styles.gameContainer}>
       <KeyframesStyle />
+      
+      {/* Back Button */}
+      <div style={styles.backButtonContainer}>
+        <button
+          onClick={() => onNavigate('games')}
+          style={styles.backButton}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#f97316';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#9ca3af';
+          }}
+        >
+          ← Back to Games
+        </button>
+      </div>
+
       {fact && (
         <div style={{ ...styles.factPopup, ...(fact.type === 'error' ? styles.factPopupError : {}) }}>
           {fact.text}
@@ -316,7 +336,21 @@ const JigsawPuzzle: React.FC = () => {
             <h2>Puzzle Complete!</h2>
             <h3>Here's an interesting fact:</h3>
             <p>{currentPuzzle.facts.completionFact}</p>
-            <button onClick={() => loadPuzzle(currentPuzzle.id)} style={styles.playAgainBtn}>Play Again</button>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.25rem' }}>
+              <button onClick={() => loadPuzzle(currentPuzzle.id)} style={styles.playAgainBtn}>
+                Play Again
+              </button>
+              <button 
+                onClick={() => onNavigate('games')} 
+                style={{
+                  ...styles.playAgainBtn,
+                  background: '#374151',
+                  border: '1px solid #4b5563'
+                }}
+              >
+                Back to Games
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -335,7 +369,32 @@ const styles: { [key: string]: CSSProperties } = {
     color: '#e5e7eb',
     fontFamily: 'sans-serif',
     minHeight: '100vh',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    width: '100%'
+  },
+
+  // Back Button Styles
+  backButtonContainer: {
+    width: '100%',
+    maxWidth: '1300px',
+    marginBottom: '1rem',
+    display: 'flex',
+    justifyContent: 'flex-start'
+  },
+
+  backButton: {
+    background: 'transparent',
+    border: 'none',
+    color: '#9ca3af',
+    fontSize: '1rem',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 1rem',
+    transition: 'color 0.2s',
+    fontFamily: 'inherit'
   },
 
   gameHeader: { textAlign: 'center', marginBottom: '1rem' },
@@ -351,7 +410,8 @@ const styles: { [key: string]: CSSProperties } = {
     padding: '0.45rem 0.9rem',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontWeight: '700'
+    fontWeight: '700',
+    transition: 'all 0.2s'
   },
   activeBtn: { background: '#f97316', borderColor: '#f97316' },
 
@@ -376,12 +436,11 @@ const styles: { [key: string]: CSSProperties } = {
 
   mainGameArea: { display: 'flex', gap: '2rem', width: '100%', maxWidth: '1300px', alignItems: 'flex-start', justifyContent: 'center' },
 
-  // Puzzle area
   boardWrapper: {
     flex: '1 1 55%',
     display: 'flex',
     flexDirection: 'column',
-    maxWidth: '560px', // slightly smaller so tray fits on typical screens
+    maxWidth: '560px',
     aspectRatio: '1/1'
   },
 
@@ -396,7 +455,6 @@ const styles: { [key: string]: CSSProperties } = {
     height: '100%'
   },
 
-  // each grid cell is a square container
   puzzleCell: {
     position: 'relative',
     width: '100%',
@@ -409,7 +467,6 @@ const styles: { [key: string]: CSSProperties } = {
     border: '1px dashed #26303a'
   },
 
-  // image placed inside a square slot — maintain original aspect without stretching
   placedPiece: {
     width: '100%',
     height: '100%',
@@ -449,7 +506,6 @@ const styles: { [key: string]: CSSProperties } = {
   gameControls: { marginTop: '1rem', display: 'flex', justifyContent: 'center' },
   hintBtn: { background: '#374151', color: '#facc15', border: '1px solid #4b5563', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' },
 
-  // Tray area (right)
   piecesTray: {
     flex: '0 0 30%',
     backgroundColor: '#1f2937',
@@ -461,7 +517,6 @@ const styles: { [key: string]: CSSProperties } = {
     alignItems: 'center'
   },
 
-  // tray content grid — 3 fixed columns, each column 70px wide
   trayContent: {
     width: '100%',
     display: 'grid',
@@ -474,7 +529,6 @@ const styles: { [key: string]: CSSProperties } = {
     padding: '0.3rem'
   },
 
-  // a wrapper cell inside tray so we can center the image inside
   trayCell: {
     width: '70px',
     height: '70px',
@@ -487,18 +541,16 @@ const styles: { [key: string]: CSSProperties } = {
     overflow: 'hidden'
   },
 
-  // image inside tray cell
   puzzlePiece: {
     width: '100%',
     height: '100%',
-    objectFit: 'contain', // maintain aspect ratio (no stretch)
+    objectFit: 'contain',
     objectPosition: 'center',
     cursor: 'grab',
     borderRadius: '4px',
     transition: 'transform 0.18s'
   },
 
-  // feedback & modal
   factPopup: {
     position: 'fixed',
     bottom: '20px',
@@ -546,7 +598,8 @@ const styles: { [key: string]: CSSProperties } = {
     padding: '0.7rem 1.6rem',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontWeight: '700'
+    fontWeight: '700',
+    transition: 'all 0.2s'
   }
 };
 

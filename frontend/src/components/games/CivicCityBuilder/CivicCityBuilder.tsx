@@ -1,6 +1,10 @@
 import React, { useState, CSSProperties } from 'react';
 
 // --- TYPES & EXPANDED GAME DATA ---
+interface CivicCityBuilderProps {
+  onNavigate: (page: string) => void;
+}
+
 interface Duty { id: string; text: string; icon: string; }
 interface Problem { id: number; description: string; solved: boolean; correctDutyId: string; position: { top: string; left: string }; icon: string; justSolved: boolean; }
 
@@ -80,7 +84,7 @@ const HowToPlay = () => (
 );
 
 // --- MAIN GAME COMPONENT ---
-const CivicCityBuilder: React.FC = () => {
+const CivicCityBuilder: React.FC<CivicCityBuilderProps> = ({ onNavigate }) => {
     const [problems, setProblems] = useState<Problem[]>(initialProblems);
     const [score, setScore] = useState(0);
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -124,8 +128,29 @@ const CivicCityBuilder: React.FC = () => {
   return (
     <div style={styles.gameContainer}>
       <KeyframesStyle />
+      
+      {/* Back Button */}
+      <div style={styles.backButtonContainer}>
+        <button
+          onClick={() => onNavigate('games')}
+          style={styles.backButton}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#f97316';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#9ca3af';
+          }}
+        >
+          ← Back to Games
+        </button>
+      </div>
+
       {feedback && ( <div style={{...styles.feedbackMessage, ...(feedback.type === 'success' ? styles.feedbackSuccess : styles.feedbackError)}}>{feedback.message}</div> )}
-      <div style={styles.gameHeader}><h2 style={styles.h2}>Civic City <span style={styles.span}>Builder</span></h2></div>
+      
+      <div style={styles.gameHeader}>
+        <h2 style={styles.h2}>Civic City <span style={styles.span}>Builder</span></h2>
+      </div>
+      
       <HowToPlay />
 
       <div style={styles.gameBoard}>
@@ -145,7 +170,15 @@ const CivicCityBuilder: React.FC = () => {
             <div style={styles.winMessage}>
                <h3 style={styles.h3}>Congratulations! Your city is thriving!</h3>
                <p style={styles.winMessageText}>This shows how applying our civic duties improves society.</p>
-               <button style={styles.button} onClick={resetGame}>Play Again</button>
+               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                 <button style={styles.button} onClick={resetGame}>Play Again</button>
+                 <button 
+                   style={{...styles.button, backgroundColor: '#374151'}} 
+                   onClick={() => onNavigate('games')}
+                 >
+                   Back to Games
+                 </button>
+               </div>
             </div>
           ) : (
             problems.map(problem => (
@@ -190,11 +223,60 @@ const CivicCityBuilder: React.FC = () => {
 
 // --- STYLES ---
 const styles: { [key: string]: CSSProperties } = {
-    gameContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem', backgroundColor: '#111827', color: '#e5e7eb', fontFamily: 'sans-serif', width: '100%', minHeight: '100vh', boxSizing: 'border-box' },
+    gameContainer: { 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        padding: '2rem 1rem', 
+        backgroundColor: '#111827', 
+        color: '#e5e7eb', 
+        fontFamily: 'sans-serif', 
+        width: '100%', 
+        minHeight: '100vh', 
+        boxSizing: 'border-box' 
+    },
+    
+    // Back Button Styles
+    backButtonContainer: {
+        width: '100%',
+        maxWidth: '1200px',
+        marginBottom: '1rem',
+        display: 'flex',
+        justifyContent: 'flex-start'
+    },
+
+    backButton: {
+        background: 'transparent',
+        border: 'none',
+        color: '#9ca3af',
+        fontSize: '1rem',
+        fontWeight: '500',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.5rem 1rem',
+        transition: 'color 0.2s',
+        fontFamily: 'inherit'
+    },
+
     gameHeader: { marginBottom: '1rem', textAlign: 'center' },
     h2: { fontSize: '3rem', fontWeight: 'bold', color: 'white', margin: 0 },
     span: { color: '#f97316' },
-    howToPlayContainer: { width: '90%', maxWidth: '1200px', backgroundColor: 'rgba(31, 41, 55, 0.6)', backdropFilter: 'blur(5px)', borderRadius: '12px', marginBottom: '1.5rem', padding: '1.5rem', border: '1px solid #374151', display: 'flex', justifyContent: 'space-around', gap: '1rem', flexWrap: 'wrap' },
+    howToPlayContainer: { 
+        width: '90%', 
+        maxWidth: '1200px', 
+        backgroundColor: 'rgba(31, 41, 55, 0.6)', 
+        backdropFilter: 'blur(5px)', 
+        borderRadius: '12px', 
+        marginBottom: '1.5rem', 
+        padding: '1.5rem', 
+        border: '1px solid #374151', 
+        display: 'flex', 
+        justifyContent: 'space-around', 
+        gap: '1rem', 
+        flexWrap: 'wrap' 
+    },
     howToPlayStep: { display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '250px' },
     stepNumber: { flexShrink: 0, width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#374151', color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold' },
     stepTitle: { margin: 0, color: 'white', fontWeight: 'bold' },
@@ -212,7 +294,7 @@ const styles: { [key: string]: CSSProperties } = {
         height: '550px',
         position: 'relative',
         borderRadius: '15px',
-        overflow: 'visible', // Allow tooltips to overflow
+        overflow: 'visible',
     },
     cityBackground: {
         width: '100%', height: '100%',
@@ -290,13 +372,42 @@ const styles: { [key: string]: CSSProperties } = {
     },
     sparkleEffect: { position: 'absolute', fontSize: '2.5rem', zIndex: 2, color: '#fde047', animation: 'sparkle 0.5s ease-out forwards' },
     scorePopup: { position: 'absolute', fontSize: '1.2rem', zIndex: 3, color: '#22c55e', fontWeight: 'bold', animation: 'score-popup 1s ease-out forwards' },
-    problemTooltip: { position: 'absolute', zIndex: 10, bottom: '130%', left: '50%', transform: 'translateX(-50%)', visibility: 'hidden', opacity: 0, width: '160px', backgroundColor: '#111827', color: '#fff', textAlign: 'center', borderRadius: '8px', padding: '10px', fontSize: '0.9rem', border: '1px solid #374151', transition: 'opacity 0.2s, visibility 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' },
+    problemTooltip: { 
+        position: 'absolute', 
+        zIndex: 10, 
+        bottom: '130%', 
+        left: '50%', 
+        transform: 'translateX(-50%)', 
+        visibility: 'hidden', 
+        opacity: 0, 
+        width: '160px', 
+        backgroundColor: '#111827', 
+        color: '#fff', 
+        textAlign: 'center', 
+        borderRadius: '8px', 
+        padding: '10px', 
+        fontSize: '0.9rem', 
+        border: '1px solid #374151', 
+        transition: 'opacity 0.2s, visibility 0.2s', 
+        boxShadow: '0 4px 6px rgba(0,0,0,0.3)' 
+    },
     toolsArea: { display: 'flex', justifyContent: 'center', gap: '1.5rem', width: '90%', maxWidth: '1100px', marginTop: '1.5rem', flexWrap: 'wrap' },
     dutyTool: {
-        background: 'linear-gradient(145deg, #4b5563, #2b3441)', color: '#e5e7eb', borderRadius: '15px', cursor: 'grab',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        border: '1px solid #5a6573', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), 0 5px 10px rgba(0,0,0,0.4)',
-        transition: 'all 0.2s ease-out', width: '140px', height: '90px', textAlign: 'center', padding: '0.5rem',
+        background: 'linear-gradient(145deg, #4b5563, #2b3441)', 
+        color: '#e5e7eb', 
+        borderRadius: '15px', 
+        cursor: 'grab',
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        border: '1px solid #5a6573', 
+        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), 0 5px 10px rgba(0,0,0,0.4)',
+        transition: 'all 0.2s ease-out', 
+        width: '140px', 
+        height: '90px', 
+        textAlign: 'center', 
+        padding: '0.5rem',
     },
     dutyToolHover: {
         transform: 'translateY(-5px)',
@@ -305,9 +416,12 @@ const styles: { [key: string]: CSSProperties } = {
     dutyToolIcon: { fontSize: '2.2rem', lineHeight: 1 },
     dutyToolText: { fontSize: '0.75rem', marginTop: '0.5rem', lineHeight: '1.2' },
     winMessage: {
-        position: 'absolute', top: '50%', left: '50%',
+        position: 'absolute', 
+        top: '50%', 
+        left: '50%',
         transform: 'translate(-50%, -50%)',
-        textAlign: 'center', padding: '2rem 3rem',
+        textAlign: 'center', 
+        padding: '2rem 3rem',
         backgroundColor: 'rgba(17, 24, 39, 0.8)',
         backdropFilter: 'blur(10px)',
         borderRadius: '15px',
@@ -315,8 +429,31 @@ const styles: { [key: string]: CSSProperties } = {
     },
     winMessageText: { color: '#d1d5db', fontSize: '1.1rem' },
     h3: { fontSize: '2.5rem', color: '#34d399', margin: '0 0 1rem 0' },
-    button: { marginTop: '1.5rem', padding: '1rem 2rem', border: 'none', backgroundColor: '#f97316', color: 'white', borderRadius: '8px', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold', transition: 'transform 0.2s' },
-    feedbackMessage: { position: 'fixed', top: '20px', padding: '10px 20px', borderRadius: '8px', color: 'white', zIndex: 100, fontWeight: 'bold', transition: 'opacity 0.5s ease-in-out', boxShadow: '0 4px 6px rgba(0,0,0,0.2)'},
+    button: { 
+        marginTop: '1.5rem', 
+        padding: '1rem 2rem', 
+        border: 'none', 
+        backgroundColor: '#f97316', 
+        color: 'white', 
+        borderRadius: '8px', 
+        cursor: 'pointer', 
+        fontSize: '1.2rem', 
+        fontWeight: 'bold', 
+        transition: 'transform 0.2s' 
+    },
+    feedbackMessage: { 
+        position: 'fixed', 
+        top: '20px', 
+        left: '50%',
+        transform: 'translateX(-50%)',
+        padding: '10px 20px', 
+        borderRadius: '8px', 
+        color: 'white', 
+        zIndex: 100, 
+        fontWeight: 'bold', 
+        transition: 'opacity 0.5s ease-in-out', 
+        boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
+    },
     feedbackSuccess: { backgroundColor: '#10b981' },
     feedbackError: { backgroundColor: '#ef4444' },
 };

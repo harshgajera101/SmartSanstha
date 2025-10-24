@@ -6,7 +6,7 @@ import { ContactPage } from './pages/ContactPage';
 import { ArticlePage } from './pages/ArticlePage';
 import { PartArticlesPage } from './pages/PartArticlesPage';
 import { LearnPage } from './components/learn/LearnPage';
-import { ExploreGames } from './components/games/ExploreGames';
+// import { ExploreGames } from './components/games/ExploreGames';
 import { MemoryGame } from './components/games/MemoryGame/MemoryGame';
 import { RightsDutiesGame } from './components/games/RightsDutiesGame/RightsDutiesGame';
 import  CivicCityBuilder  from './components/games/CivicCityBuilder/CivicCityBuilder';
@@ -14,6 +14,7 @@ import JigsawPuzzle from './components/games/JigsawPuzzle/JigsawPuzzle';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ChatbotFloating } from './components/chatbot/ChatbotFloating';
 import { CourtSimulationPage } from './pages/CourtSimulationPage';
+import { GamesPage } from './pages/GamesPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -39,16 +40,18 @@ function App() {
         return <PartArticlesPage onNavigate={handleNavigation} partData={pageData} />;
       case 'article':
         return <ArticlePage onNavigate={handleNavigation} articleData={pageData} />;
+      // case 'games':
+      //   return <ExploreGames onNavigate={handleNavigation} />;
       case 'games':
-        return <ExploreGames onNavigate={handleNavigation} />;
+        return <GamesPage onNavigate={handleNavigation} />;
       case 'memory-game':
-        return <MemoryGame />;
+        return <MemoryGame onNavigate={handleNavigation}/>;
       case 'rights-duties-game':
-        return <RightsDutiesGame />;
+        return <RightsDutiesGame onNavigate={handleNavigation}/>;
       case 'civic-city-builder':
-        return <CivicCityBuilder />;
+        return <CivicCityBuilder onNavigate={handleNavigation}/>;
       case 'jigsaw-puzzle':
-        return <JigsawPuzzle />;  
+        return <JigsawPuzzle onNavigate={handleNavigation}/>;  
       case 'dashboard':
         return <Dashboard />;
       case 'contact':

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Brain, RotateCcw, Trophy, CheckCircle } from "lucide-react";
+import { Brain, RotateCcw, Trophy, CheckCircle, ArrowLeft } from "lucide-react";
 import { Button } from "../../common/Button";
 import { ProgressBar } from "../../common/ProgressBar";
 import { Modal } from "../../common/Modal";
@@ -10,7 +10,11 @@ import { MemoryCard } from "./MemoryCard";
 import { GameStats } from "./GameStats";
 import { MatchModal } from "./MatchModal";
 
-export const MemoryGame: React.FC = () => {
+interface MemoryGameProps {
+  onNavigate: (page: string) => void;
+}
+
+export const MemoryGame: React.FC<MemoryGameProps> = ({ onNavigate }) => {
   const [cards, setCards] = useState<ArticleCard[]>([]);
   const [first, setFirst] = useState<number | null>(null);
   const [second, setSecond] = useState<number | null>(null);
@@ -102,45 +106,65 @@ export const MemoryGame: React.FC = () => {
   const gridCols = useMemo(() => "grid-cols-3 sm:grid-cols-6", []);
 
   return (
-    <div className="w-full max-w-7xl animate-fade-in">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-xl mb-6">
-          <Brain className="w-10 h-10 text-white" />
-        </div>
-        <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">Constitution Card Match</h1>
-        <p className="text-xl text-slate-400">Test your memory and learn about key constitutional articles.</p>
-      </div>
+    <div className="w-full min-h-screen bg-slate-900 py-8 px-4">
+      <div className="max-w-7xl mx-auto animate-fade-in">
+        {/* Back Button */}
+        <button
+          onClick={() => onNavigate('games')}
+          className="flex items-center gap-2 text-slate-400 hover:text-orange-400 transition-colors mb-8 group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Back to Games</span>
+        </button>
 
-      <GameStats moves={moves} matches={matches} totalPairs={totalPairs} time={formatTime(timeElapsed)} best={best} onNewGame={initialize} />
-      <div className="mb-8"><ProgressBar value={progressPercent} /></div>
-
-      <main className={`grid gap-4 ${gridCols} mb-8`}>
-        {cards.map((card, idx) => <MemoryCard key={card.uid} card={card} onFlip={() => handleFlip(idx)} />)}
-      </main>
-
-      <MatchModal 
-        isOpen={showMatchModal}
-        onClose={() => setShowMatchModal(false)}
-        articleData={matchedArticleData}
-      />
-
-      {showCompleteModal && (
-        <Modal isOpen={showCompleteModal} onClose={() => {}}>
-          <div className="text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Trophy className="w-10 h-10 text-white animate-bounce" />
-            </div>
-            <h3 className="text-3xl font-bold text-white mb-2">Congratulations!</h3>
-            <p className="text-lg text-slate-400 mb-4">{getPerformanceMessage()}</p>
-            <div className="bg-slate-700 border border-slate-600 rounded-xl p-6 mb-6 space-y-3">
-              <div className="flex justify-between items-center"><span className="text-slate-400">Moves:</span><span className="text-2xl font-bold text-white">{moves}</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-400">Time:</span><span className="text-2xl font-bold text-white">{formatTime(timeElapsed)}</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-400">Personal Best:</span><span className="text-2xl font-bold text-orange-400">{best || moves} moves</span></div>
-            </div>
-            <Button onClick={initialize} variant="primary" className="flex-1">Play Again</Button>
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-xl mb-6">
+            <Brain className="w-10 h-10 text-white" />
           </div>
-        </Modal>
-      )}
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">Constitution Card Match</h1>
+          <p className="text-xl text-slate-400">Test your memory and learn about key constitutional articles.</p>
+        </div>
+
+        <GameStats moves={moves} matches={matches} totalPairs={totalPairs} time={formatTime(timeElapsed)} best={best} onNewGame={initialize} />
+        <div className="mb-8"><ProgressBar value={progressPercent} /></div>
+
+        <main className={`grid gap-4 ${gridCols} mb-8`}>
+          {cards.map((card, idx) => <MemoryCard key={card.uid} card={card} onFlip={() => handleFlip(idx)} />)}
+        </main>
+
+        <MatchModal 
+          isOpen={showMatchModal}
+          onClose={() => setShowMatchModal(false)}
+          articleData={matchedArticleData}
+        />
+
+        {showCompleteModal && (
+          <Modal isOpen={showCompleteModal} onClose={() => {}}>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Trophy className="w-10 h-10 text-white animate-bounce" />
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-2">Congratulations!</h3>
+              <p className="text-lg text-slate-400 mb-4">{getPerformanceMessage()}</p>
+              <div className="bg-slate-700 border border-slate-600 rounded-xl p-6 mb-6 space-y-3">
+                <div className="flex justify-between items-center"><span className="text-slate-400">Moves:</span><span className="text-2xl font-bold text-white">{moves}</span></div>
+                <div className="flex justify-between items-center"><span className="text-slate-400">Time:</span><span className="text-2xl font-bold text-white">{formatTime(timeElapsed)}</span></div>
+                <div className="flex justify-between items-center"><span className="text-slate-400">Personal Best:</span><span className="text-2xl font-bold text-orange-400">{best || moves} moves</span></div>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={initialize} variant="primary">
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Play Again
+                </Button>
+                <Button onClick={() => onNavigate('games')} variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Games
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
+      </div>
     </div>
   );
 };
