@@ -177,7 +177,7 @@ export const LearnPage: React.FC<LearnPageProps> = ({ onNavigate = () => {} }) =
     }
   };
 
-  // Enhanced search and filter
+  // Enhanced search with article number support
   const getFilteredParts = () => {
     let filtered = parts;
 
@@ -196,9 +196,13 @@ export const LearnPage: React.FC<LearnPageProps> = ({ onNavigate = () => {} }) =
       }
     }
 
-    // Apply search filter
+    // Apply search filter with article number support
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
+      
+      // Check if search query is a number (for article number search)
+      const isNumericSearch = /^\d+$/.test(query);
+      
       filtered = filtered.filter((part) => {
         // Search in part title
         const titleMatch = part.title?.toLowerCase().includes(query);
@@ -206,16 +210,45 @@ export const LearnPage: React.FC<LearnPageProps> = ({ onNavigate = () => {} }) =
         // Search in part description
         const descriptionMatch = part.description?.toLowerCase().includes(query);
         
-        // Search in article titles and subjects within this part
-        const articleMatch = part.articles?.some((article: any) => 
-          article.title?.toLowerCase().includes(query) ||
-          article.article?.toLowerCase().includes(query) ||
-          article.subject?.toLowerCase().includes(query)
-        );
+        // Enhanced article search with article number support
+        const articleMatch = part.articles?.some((article: any) => {
+          // Match by article title
+          const titleMatch = article.title?.toLowerCase().includes(query);
+          
+          // Match by article field (e.g., "Article 21" or just "21")
+          const articleFieldMatch = article.article?.toLowerCase().includes(query);
+          
+          // Match by subject
+          const subjectMatch = article.subject?.toLowerCase().includes(query);
+          
+          // Special handling for numeric article number search
+          if (isNumericSearch) {
+            // Extract number from article field (e.g., "21" from "Article 21" or just "21")
+            const articleNumber = article.article?.replace(/[^\d]/g, '');
+            const exactNumberMatch = articleNumber === query;
+            
+            console.log(`🔢 Checking article ${article.article}: number="${articleNumber}", query="${query}", match=${exactNumberMatch}`);
+            
+            return exactNumberMatch || articleFieldMatch || titleMatch || subjectMatch;
+          }
+          
+          return titleMatch || articleFieldMatch || subjectMatch;
+        });
 
-        return titleMatch || descriptionMatch || articleMatch;
+        const matches = titleMatch || descriptionMatch || articleMatch;
+        
+        if (matches && isNumericSearch) {
+          console.log(`✅ Part "${part.title}" contains article matching number "${query}"`);
+        }
+
+        return matches;
       });
+      
       console.log(`🔍 Filtered by search "${searchQuery}":`, filtered.length, 'parts');
+      
+      if (isNumericSearch) {
+        console.log(`🔢 Numeric search for article number "${query}" returned ${filtered.length} parts`);
+      }
     }
 
     return filtered;
@@ -335,16 +368,23 @@ export const LearnPage: React.FC<LearnPageProps> = ({ onNavigate = () => {} }) =
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* Search Bar */}
+          {/* Enhanced Search Bar with Article Number Support */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by part name, article title, subject, or article number..."
+              placeholder="Search by part name, article title, subject, or article number (e.g., 21, 370)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
+            {searchQuery && /^\d+$/.test(searchQuery.trim()) && (
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <span className="px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-xs font-semibold">
+                  Article #{searchQuery}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Subject Filter Buttons */}
@@ -386,7 +426,11 @@ export const LearnPage: React.FC<LearnPageProps> = ({ onNavigate = () => {} }) =
             )}
             {searchQuery.trim() && (
               <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-400 text-sm flex items-center gap-2">
-                Search: "{searchQuery}"
+                {/^\d+$/.test(searchQuery.trim()) ? (
+                  <>Article #{searchQuery}</>
+                ) : (
+                  <>Search: "{searchQuery}"</>
+                )}
                 <button 
                   onClick={() => setSearchQuery('')}
                   className="hover:text-blue-300"
@@ -413,7 +457,14 @@ export const LearnPage: React.FC<LearnPageProps> = ({ onNavigate = () => {} }) =
         {filteredParts.length === parts.length ? (
           `Showing all ${parts.length} parts`
         ) : (
-          `Found ${filteredParts.length} of ${parts.length} parts`
+          <>
+            Found {filteredParts.length} of {parts.length} parts
+            {searchQuery && /^\d+$/.test(searchQuery.trim()) && (
+              <span className="ml-2 text-blue-400">
+                (searching for Article {searchQuery})
+              </span>
+            )}
+          </>
         )}
       </div>
 
