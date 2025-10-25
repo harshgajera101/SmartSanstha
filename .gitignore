@@ -1,0 +1,4 @@
+.DS_Store
+frontend/public/models/courtroom.glb
+.env
+node_modules/
