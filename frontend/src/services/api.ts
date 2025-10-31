@@ -9,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 90000,
 });
 
 // Request interceptor
@@ -57,15 +57,23 @@ export const chatbotAPI = {
   askAboutArticle: (articleNumber: string, question: string) =>
     api.post('/chatbot/article-question', { articleNumber, question }),
 };
+// REQUIRED changes for your api.js file to work
 
-// Quiz APIs
 export const quizAPI = {
-  generateFromPart: (part: string, questionCount: number = 5) =>
-    api.post('/quiz/from-part', { part, questionCount }),
-  generateFromArticle: (articleNumber: string, questionCount: number = 5) =>
-    api.post('/quiz/from-article', { articleNumber, questionCount }),
-  generateRandom: (questionCount: number = 5, category?: string) =>
-    api.get('/quiz/random', { params: { questionCount, category } }),
-};
+  /**
+   * Starts a new adaptive quiz session for a given part.
+   * @returns {Promise<{quizId: string, question: object, questionNumber: number, totalQuestions: number}>}
+   */
+  startQuiz: (part: string) => 
+    api.post('/quiz/start', { part }),
 
-export default api;
+  /**
+   * Submits an answer and gets the result + the next question.
+   * @returns {Promise<{quizOver: boolean, result: object, question?: object, ...}>}
+   */
+  submitAnswer: (quizId: string, questionId: string, answerIndex: number) =>
+    api.post('/quiz/answer', { quizId, questionId, answerIndex }),
+  
+  // The old 'generateFromPart' is now obsolete
+  // generateFromPart: ... 
+};

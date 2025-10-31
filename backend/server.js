@@ -1,11 +1,15 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
 import articleRoutes from './routes/articleRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
 import courtRoutes from './routes/courtRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -18,8 +22,14 @@ const PORT = process.env.PORT || 5001;
 // MIDDLEWARE
 // =================================================================
 console.log('⚙️  Setting up middleware...');
-app.use(cors());
+app.use(
+  cors({
+    origin: ['http://localhost:5173'], // change to your Vite dev URL or production host
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 console.log('✅ Middleware configured');
 
 // =================================================================
@@ -55,6 +65,9 @@ app.use('/api/articles', articleRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/court', courtRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -87,10 +100,10 @@ connectDB().then(() => {
     console.log('    GET  /api/articles/part/:part');
     console.log('    GET  /api/articles/search?q=...');
     console.log('  Chatbot:');
-    console.log('    POST /api/chatbot/chat (not implemented)');
+    console.log('    POST /api/chatbot/chat');
     console.log('  Quiz:');
-    console.log('    POST /api/quiz/from-part (not implemented)');
-    console.log('    POST /api/quiz/from-article (not implemented)');
+    console.log('    POST /api/quiz/from-part');
+    console.log('    POST /api/quiz/from-article');
     console.log('');
     console.log('Press Ctrl+C to stop');
     console.log('');

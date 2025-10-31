@@ -37,13 +37,21 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Quiz state
+  // --- NEW ADAPTIVE QUIZ STATE ---
   const [showQuiz, setShowQuiz] = useState(false);
-  const [quiz, setQuiz] = useState<any[]>([]);
   const [quizLoading, setQuizLoading] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
+
+  const [quizId, setQuizId] = useState<string | null>(null);
+  const [currentQuizQuestion, setCurrentQuizQuestion] = useState<any>(null); // Single question
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null); // Single answer
+  const [lastResult, setLastResult] = useState<any>(null); // For immediate feedback
+  const [quizHistory, setQuizHistory] = useState<any[]>([]); // To show results
+  const [finalScore, setFinalScore] = useState(0);
+  const [questionNumber, setQuestionNumber] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Loader for submit
+  // --- END NEW QUIZ STATE ---
 
   useEffect(() => {
     if (partData?.partName) {
@@ -62,11 +70,8 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
 
       const response: any = await articleAPI.getArticlesByPart(partName);
 
-      console.log("Response received:", response);
-
       if (response?.success) {
         setArticles(response.data || []);
-        console.log(`✅ Loaded ${response.data?.length || 0} articles`);
       } else {
         setError("Failed to load articles");
       }
@@ -79,11 +84,6 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
   };
 
   const handleArticleClick = (article: any, index: number) => {
-    console.log("🎯 Article clicked:", article);
-    console.log("📋 All articles:", articles);
-    console.log("🔢 Index:", index);
-
-    // Extract article number
     let articleNumber = "";
 
     if (article.article === "Preamble") {
@@ -100,51 +100,50 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
       }
     }
 
-    console.log("🔢 Extracted article number:", articleNumber);
-
     if (articleNumber) {
-      // Navigate with all articles data AND part info for proper back navigation
       onNavigate("article", {
         articleNumber,
         allArticles: articles,
         currentIndex: index,
-        partName: partData?.partName, // Pass part name
-        partTitle: partData?.partTitle, // Pass part title
+        partName: partData?.partName,
+        partTitle: partData?.partTitle,
       });
     } else {
-      console.error("❌ Could not extract article number from:", article);
       alert("Unable to open this article");
     }
   };
 
+  // --- UPDATED QUIZ HANDLERS ---
+
   const handleStartQuiz = async () => {
     try {
       setQuizLoading(true);
-      console.log(`🎯 Generating quiz for part: ${partData?.partName}...`);
+      const topic = partData?.partName || "";
+      console.log(`🎯 Starting quiz for part: ${topic}...`);
 
-      const response: any = await quizAPI.generateFromPart(
-        partData?.partName || "",
-        10
-      );
+      const response: any = await quizAPI.startQuiz(topic);
 
-      if (response?.success && response?.data?.quiz) {
-        setQuiz(response.data.quiz);
+      if (response?.success) {
+        setQuizId(response.quizId);
+        setCurrentQuizQuestion(response.question);
+        setQuestionNumber(response.questionNumber);
+        setTotalQuestions(response.totalQuestions);
+
         setShowQuiz(true);
-        setCurrentQuestion(0);
-        setSelectedAnswers([]);
         setShowResults(false);
-        console.log(
-          "✅ Quiz generated with",
-          response.data.quiz.length,
-          "questions"
-        );
+        setSelectedAnswer(null);
+        setLastResult(null);
+        setQuizHistory([]); // Clear history
+        setFinalScore(0);
+
+        console.log("✅ Quiz started with ID:", response.quizId);
       } else {
         alert(
-          "Failed to generate quiz. This feature requires Google Gemini API configuration."
+          "Failed to start quiz. This feature requires Google Gemini API configuration."
         );
       }
     } catch (err: any) {
-      console.error("❌ Error generating quiz:", err);
+      console.error("❌ Error starting quiz:", err);
       alert(
         "Quiz generation is not available yet. Please configure Google Gemini API in the backend."
       );
@@ -154,41 +153,74 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestion] = answerIndex;
-    setSelectedAnswers(newAnswers);
+    setSelectedAnswer(answerIndex);
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestion < quiz.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-    } else {
-      setShowResults(true);
-    }
-  };
+  const handleSubmitAnswer = async () => {
+    if (selectedAnswer === null || !quizId || !currentQuizQuestion?.id) return;
+    if (isSubmitting) return;
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => prev - 1);
-    }
-  };
+    try {
+      setIsSubmitting(true);
+      const response: any = await quizAPI.submitAnswer(
+        quizId,
+        currentQuizQuestion.id,
+        selectedAnswer
+      );
 
-  const calculateScore = () => {
-    let correct = 0;
-    selectedAnswers.forEach((answer, index) => {
-      if (quiz[index] && answer === quiz[index].correctAnswer) {
-        correct++;
+      if (response?.success) {
+        // Store history for the results page
+        setQuizHistory((prev) => [
+          ...prev,
+          {
+            question: currentQuizQuestion,
+            answer: selectedAnswer,
+            result: response.result,
+          },
+        ]);
+        setLastResult(response.result); // For immediate feedback (if needed)
+
+        if (response.quizOver) {
+          console.log("✅ Quiz finished. Final Score:", response.finalScore);
+          setFinalScore(response.finalScore);
+          setShowResults(true);
+          setCurrentQuizQuestion(null);
+        } else {
+          // Load next question
+          setCurrentQuizQuestion(response.question);
+          setQuestionNumber(response.questionNumber);
+          setTotalQuestions(response.totalQuestions);
+          setSelectedAnswer(null); // Reset selection
+        }
+      } else {
+        alert("Failed to submit answer.");
       }
-    });
-    return correct;
+    } catch (err: any) {
+      console.error("❌ Error submitting answer:", err);
+      alert("An error occurred while submitting your answer.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // This function now just returns the score provided by the server
+  const calculateScore = () => {
+    return finalScore;
   };
 
   const resetQuiz = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers([]);
-    setShowResults(false);
     setShowQuiz(false);
+    setShowResults(false);
+    setQuizId(null);
+    setCurrentQuizQuestion(null);
+    setSelectedAnswer(null);
+    setLastResult(null);
+    setQuizHistory([]);
+    setFinalScore(0);
+    setQuestionNumber(0);
   };
+
+  // --- END UPDATED QUIZ HANDLERS ---
 
   const filteredArticles = articles.filter(
     (article) =>
@@ -399,10 +431,11 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
         </div>
       )}
 
-      {/* Quiz Section */}
+      {/* --- UPDATED QUIZ SECTION --- */}
       {articles.length > 0 && (
         <Card className="mb-8 bg-gradient-to-br from-slate-800 to-slate-900 border-orange-500/30">
           {!showQuiz ? (
+            // "Start Quiz" Button
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
                 <Brain className="w-10 h-10 text-white" />
@@ -411,7 +444,7 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                 Test Your Knowledge
               </h3>
               <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
-                Take a comprehensive quiz on all articles in{" "}
+                Take an adaptive quiz on all articles in{" "}
                 {partData.partTitle}
               </p>
               <Button
@@ -426,51 +459,51 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                   )
                 }
               >
-                {quizLoading ? "Generating Quiz..." : "Start Quiz"}
+                {quizLoading ? "Generating Quiz..." : "Start Adaptive Quiz"}
               </Button>
               <p className="text-slate-500 text-sm mt-4">
-                Note: Quiz generation requires Google Gemini API configuration
+                Note: This quiz adapts to your answers. Good luck!
               </p>
             </div>
           ) : !showResults ? (
+            // Quiz In Progress View (UPDATED)
             <div className="animate-fade-in">
               {/* Quiz Progress */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-slate-400 font-semibold">
-                    Question {currentQuestion + 1} of {quiz.length}
+                    Question {questionNumber} of {totalQuestions}
                   </span>
                   <span className="text-slate-400 font-semibold">
-                    {selectedAnswers.filter((a) => a !== undefined).length}/
-                    {quiz.length} Answered
+                    Score: {quizHistory.filter(h => h.result.isCorrect).length}
                   </span>
                 </div>
                 <ProgressBar
-                  value={((currentQuestion + 1) / quiz.length) * 100}
+                  value={(questionNumber / totalQuestions) * 100}
                   color="primary"
                 />
               </div>
 
               {/* Question */}
-              {quiz[currentQuestion] && (
+              {currentQuizQuestion && (
                 <>
                   <div className="mb-8">
                     <h4 className="text-2xl font-bold text-white mb-6 flex items-start gap-3">
                       <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 text-sm">
-                        {currentQuestion + 1}
+                        {questionNumber}
                       </span>
-                      {quiz[currentQuestion].question}
+                      {currentQuizQuestion.question}
                     </h4>
 
-                    {/* Options */}
+                    {/* Options (UPDATED) */}
                     <div className="space-y-3">
-                      {quiz[currentQuestion].options?.map(
+                      {currentQuizQuestion.options?.map(
                         (option: string, index: number) => (
                           <button
                             key={index}
                             onClick={() => handleAnswerSelect(index)}
                             className={`w-full p-5 rounded-xl text-left transition-all border-2 ${
-                              selectedAnswers[currentQuestion] === index
+                              selectedAnswer === index // Use single selectedAnswer
                                 ? "bg-orange-500 border-orange-400 text-white shadow-lg"
                                 : "bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500"
                             }`}
@@ -478,12 +511,12 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                             <div className="flex items-center gap-4">
                               <div
                                 className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                  selectedAnswers[currentQuestion] === index
+                                  selectedAnswer === index
                                     ? "border-white bg-white text-orange-500"
                                     : "border-slate-500"
                                 }`}
                               >
-                                {selectedAnswers[currentQuestion] === index && (
+                                {selectedAnswer === index && (
                                   <CheckCircle className="w-5 h-5" />
                                 )}
                               </div>
@@ -495,28 +528,26 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                     </div>
                   </div>
 
-                  {/* Navigation */}
-                  <div className="flex justify-between items-center pt-6 border-t border-slate-700">
+                  {/* Navigation (UPDATED) */}
+                  <div className="flex justify-end items-center pt-6 border-t border-slate-700">
+                    {/* Previous Button is REMOVED */}
                     <Button
-                      variant="outline"
-                      onClick={handlePreviousQuestion}
-                      disabled={currentQuestion === 0}
+                      onClick={handleSubmitAnswer} // Use new handler
+                      disabled={selectedAnswer === null || isSubmitting} // Use new disabled state
+                      icon={ isSubmitting ? <Loader className="w-5 h-5 animate-spin" /> : undefined }
                     >
-                      Previous
-                    </Button>
-                    <Button
-                      onClick={handleNextQuestion}
-                      disabled={selectedAnswers[currentQuestion] === undefined}
-                    >
-                      {currentQuestion === quiz.length - 1
+                      {isSubmitting
+                        ? "Submitting..."
+                        : questionNumber === totalQuestions // Check if last question
                         ? "Finish Quiz"
-                        : "Next Question"}
+                        : "Submit Answer"}
                     </Button>
                   </div>
                 </>
               )}
             </div>
           ) : (
+            // Results View (UPDATED)
             <div className="text-center py-12 animate-fade-in">
               {/* Results */}
               <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
@@ -526,21 +557,20 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                 Quiz Complete!
               </h3>
               <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 mb-2">
-                {calculateScore()}/{quiz.length}
+                {finalScore}/{totalQuestions}
               </div>
               <p className="text-slate-400 text-xl mb-8">
-                {calculateScore() === quiz.length
+                {finalScore === totalQuestions
                   ? "Perfect score! You mastered this part! 🏆"
-                  : calculateScore() >= quiz.length * 0.7
+                  : finalScore >= totalQuestions * 0.7
                   ? "Great job! You have a good understanding! 👏"
                   : "Keep learning! Review the articles and try again. 📚"}
               </p>
 
-              {/* Detailed Results */}
+              {/* Detailed Results (UPDATED) */}
               <div className="max-w-3xl mx-auto mb-8 text-left space-y-4">
-                {quiz.map((question: any, index: number) => {
-                  const isCorrect =
-                    selectedAnswers[index] === question.correctAnswer;
+                {quizHistory.map((historyItem: any, index: number) => {
+                  const isCorrect = historyItem.result.isCorrect;
                   return (
                     <Card
                       key={index}
@@ -562,7 +592,7 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                         </div>
                         <div className="flex-1">
                           <h5 className="font-bold text-white mb-2">
-                            {question.question}
+                            {historyItem.question.question}
                           </h5>
                           <p
                             className={`text-sm mb-2 ${
@@ -570,17 +600,21 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
                             }`}
                           >
                             Your answer:{" "}
-                            {question.options?.[selectedAnswers[index]]}
+                            {historyItem.question.options?.[historyItem.answer]}
                           </p>
                           {!isCorrect && (
                             <p className="text-sm text-green-400 mb-2">
                               Correct answer:{" "}
-                              {question.options?.[question.correctAnswer]}
+                              {
+                                historyItem.question.options?.[
+                                  historyItem.result.correctAnswer
+                                ]
+                              }
                             </p>
                           )}
-                          {question.explanation && (
+                          {historyItem.result.explanation && (
                             <p className="text-slate-400 text-sm">
-                              {question.explanation}
+                              {historyItem.result.explanation}
                             </p>
                           )}
                         </div>
@@ -594,7 +628,7 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
               <div className="flex gap-4 justify-center">
                 <Button
                   variant="outline"
-                  onClick={resetQuiz}
+                  onClick={resetQuiz} // This is correct, it resets to the "Start Quiz" screen
                   icon={<RotateCcw className="w-5 h-5" />}
                 >
                   Retake Quiz

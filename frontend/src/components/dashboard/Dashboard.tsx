@@ -1,16 +1,30 @@
 import React from 'react';
-import { BarChart3, Trophy, Target, TrendingUp, Award, Flame, Calendar, BookOpen } from 'lucide-react';
+import { BarChart3, Trophy, Target, TrendingUp, Flame, Calendar, BookOpen } from 'lucide-react';
 import { Card } from '../common/Card';
 import { ProgressBar } from '../common/ProgressBar';
 import { UserProgress } from './UserProgress';
 import { ScoreCard } from './ScoreCard';
 import { AchievementBadges } from './AchievementBadges';
 
-export const Dashboard: React.FC = () => {
-  // Demo data - replace with actual user data later
+interface UserData {
+  name: string;
+}
+
+interface DashboardProps {
+  user: UserData | null;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+  if (!user) {
+    return (
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-white">Loading user data...</h1>
+      </div>
+    );
+  }
+
   const userData = {
-    name: 'Harsh Gajera',
-    avatar: 'HG',
+    avatar: user.name.split(' ').map(n => n[0]).join(''), // Initials
     totalScore: 2450,
     gamesPlayed: 15,
     articlesRead: 23,
@@ -45,7 +59,7 @@ export const Dashboard: React.FC = () => {
             {userData.avatar}
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-white">Welcome back, {userData.name}! 👋</h1>
+            <h1 className="text-4xl font-bold text-white">Welcome back, {user.name}! 👋</h1>
             <p className="text-slate-400">Track your constitutional learning journey</p>
           </div>
         </div>
@@ -53,34 +67,10 @@ export const Dashboard: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <ScoreCard
-          icon={Trophy}
-          label="Total Score"
-          value={userData.totalScore}
-          gradient="from-yellow-500 to-orange-500"
-          trend="+12%"
-        />
-        <ScoreCard
-          icon={Flame}
-          label="Current Streak"
-          value={`${userData.currentStreak} days`}
-          gradient="from-red-500 to-pink-500"
-          trend="🔥"
-        />
-        <ScoreCard
-          icon={Target}
-          label="Games Played"
-          value={userData.gamesPlayed}
-          gradient="from-blue-500 to-cyan-500"
-          trend="+3"
-        />
-        <ScoreCard
-          icon={BookOpen}
-          label="Articles Read"
-          value={userData.articlesRead}
-          gradient="from-purple-500 to-pink-500"
-          trend="+5"
-        />
+        <ScoreCard icon={Trophy} label="Total Score" value={userData.totalScore} gradient="from-yellow-500 to-orange-500" trend="+12%" />
+        <ScoreCard icon={Flame} label="Current Streak" value={`${userData.currentStreak} days`} gradient="from-red-500 to-pink-500" trend="🔥" />
+        <ScoreCard icon={Target} label="Games Played" value={userData.gamesPlayed} gradient="from-blue-500 to-cyan-500" trend="+3" />
+        <ScoreCard icon={BookOpen} label="Articles Read" value={userData.articlesRead} gradient="from-purple-500 to-pink-500" trend="+5" />
       </div>
 
       {/* Main Content Grid */}
@@ -147,18 +137,14 @@ export const Dashboard: React.FC = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-4 text-center text-sm text-slate-500">
-              Average daily activity: 72 minutes
-            </div>
+            <div className="mt-4 text-center text-sm text-slate-500">Average daily activity: 72 minutes</div>
           </Card>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-8">
-          {/* Achievements */}
           <AchievementBadges />
 
-          {/* Recent Activity */}
           <Card>
             <div className="flex items-center gap-3 mb-6">
               <Calendar className="w-6 h-6 text-orange-400" />
@@ -167,20 +153,22 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-4">
               {recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    activity.type === 'game' ? 'bg-gradient-to-br from-blue-500 to-cyan-500' :
-                    activity.type === 'article' ? 'bg-gradient-to-br from-purple-500 to-pink-500' :
-                    'bg-gradient-to-br from-green-500 to-emerald-500'
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      activity.type === 'game'
+                        ? 'bg-gradient-to-br from-blue-500 to-cyan-500'
+                        : activity.type === 'article'
+                        ? 'bg-gradient-to-br from-purple-500 to-pink-500'
+                        : 'bg-gradient-to-br from-green-500 to-emerald-500'
+                    }`}
+                  >
                     {activity.type === 'game' ? '🎮' : activity.type === 'article' ? '📖' : '📝'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-white font-semibold text-sm truncate">{activity.title}</h4>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs text-slate-400">{activity.date}</span>
-                      {activity.score && (
-                        <span className="text-xs font-bold text-orange-400">{activity.score}%</span>
-                      )}
+                      {activity.score && <span className="text-xs font-bold text-orange-400">{activity.score}%</span>}
                     </div>
                   </div>
                 </div>
@@ -190,7 +178,6 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* User Progress Component */}
       <UserProgress />
     </div>
   );

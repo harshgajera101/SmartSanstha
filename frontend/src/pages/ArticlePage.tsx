@@ -41,40 +41,33 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
   onNavigate,
   articleData,
 }) => {
-  console.log("📄 ArticlePage mounted");
-  console.log("📦 Article data received:", articleData);
-
-  //   useEffect(() => {
-  //   console.log('📦 ArticlePage received data:');
-  //   console.log('  - articleNumber:', articleData?.articleNumber);
-  //   console.log('  - allArticles:', articleData?.allArticles);
-  //   console.log('  - currentIndex:', articleData?.currentIndex);
-
-  //   if (articleData?.allArticles) {
-  //     console.log('📚 All articles in this part:');
-  //     articleData.allArticles.forEach((art: any, idx: number) => {
-  //       console.log(`  ${idx}: ${art.article} - ${art.title}`);
-  //     });
-  //   }
-  // }, [articleData]);
-
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"simplified" | "original">(
     "simplified"
   );
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [quiz, setQuiz] = useState<any[]>([]);
-  const [quizLoading, setQuizLoading] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
-  const [showResults, setShowResults] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   // Navigation state
   const [allArticles, setAllArticles] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // --- NEW ADAPTIVE QUIZ STATE ---
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const [quizId, setQuizId] = useState<string | null>(null);
+  const [currentQuizQuestion, setCurrentQuizQuestion] = useState<any>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [lastResult, setLastResult] = useState<any>(null);
+  const [quizHistory, setQuizHistory] = useState<any[]>([]);
+  const [finalScore, setFinalScore] = useState(0);
+  const [questionNumber, setQuestionNumber] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // --- END NEW QUIZ STATE ---
 
   useEffect(() => {
     if (articleData?.articleNumber) {
@@ -99,13 +92,9 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
 
       const response: any = await articleAPI.getArticle(articleNumber);
 
-      console.log("Response received:", response);
-
       if (response?.success) {
         setArticle(response.data);
         console.log("✅ Article loaded:", response.data.articleName);
-
-        // Scroll to top when new article loads
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         setError("Failed to load article data");
@@ -121,38 +110,25 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
   const handlePreviousArticle = () => {
     if (currentIndex > 0) {
       const prevArticle = allArticles[currentIndex - 1];
-      console.log("⬅️ Going to previous article:", prevArticle);
-
-      // Extract article number
       let articleNumber = "";
-
       if (prevArticle.article === "Preamble") {
         articleNumber = "0";
       } else {
         const match = prevArticle.article?.match(/Article\s+(\d+)/);
-        if (match) {
-          articleNumber = match[1];
-        } else if (prevArticle.id) {
+        if (match) articleNumber = match[1];
+        else if (prevArticle.id) {
           const idMatch = prevArticle.id.match(/article-(\d+)/);
-          if (idMatch) {
-            articleNumber = idMatch[1];
-          }
+          if (idMatch) articleNumber = idMatch[1];
         }
       }
-
-      console.log("🔢 Extracted article number:", articleNumber);
-
       if (articleNumber) {
         onNavigate("article", {
           articleNumber,
           allArticles: allArticles,
           currentIndex: currentIndex - 1,
-          partName: articleData?.partName, // Preserve part info
-          partTitle: articleData?.partTitle, // Preserve part info
+          partName: articleData?.partName,
+          partTitle: articleData?.partTitle,
         });
-      } else {
-        console.error("❌ Could not extract article number from:", prevArticle);
-        alert("Unable to navigate to previous article");
       }
     }
   };
@@ -160,72 +136,61 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
   const handleNextArticle = () => {
     if (currentIndex < allArticles.length - 1) {
       const nextArticle = allArticles[currentIndex + 1];
-      console.log("➡️ Going to next article:", nextArticle);
-
-      // Extract article number
       let articleNumber = "";
-
       if (nextArticle.article === "Preamble") {
         articleNumber = "0";
       } else {
         const match = nextArticle.article?.match(/Article\s+(\d+)/);
-        if (match) {
-          articleNumber = match[1];
-        } else if (nextArticle.id) {
+        if (match) articleNumber = match[1];
+        else if (nextArticle.id) {
           const idMatch = nextArticle.id.match(/article-(\d+)/);
-          if (idMatch) {
-            articleNumber = idMatch[1];
-          }
+          if (idMatch) articleNumber = idMatch[1];
         }
       }
-
-      console.log("🔢 Extracted article number:", articleNumber);
-
       if (articleNumber) {
         onNavigate("article", {
           articleNumber,
           allArticles: allArticles,
           currentIndex: currentIndex + 1,
-          partName: articleData?.partName, // Preserve part info
-          partTitle: articleData?.partTitle, // Preserve part info
+          partName: articleData?.partName,
+          partTitle: articleData?.partTitle,
         });
-      } else {
-        console.error("❌ Could not extract article number from:", nextArticle);
-        alert("Unable to navigate to next article");
       }
     }
   };
 
+  // --- UPDATED QUIZ HANDLERS ---
+
   const handleStartQuiz = async () => {
     try {
       setQuizLoading(true);
-      console.log(
-        `🎯 Generating quiz for article ${articleData?.articleNumber}...`
-      );
+      // Use the article's part name as the topic
+      const topic = article?.part?.name || articleData?.partName || "General";
+      console.log(`🎯 Starting quiz for topic: ${topic}...`);
 
-      const response: any = await quizAPI.generateFromArticle(
-        articleData?.articleNumber || "0",
-        5
-      );
+      const response: any = await quizAPI.startQuiz(topic);
 
-      if (response?.success && response?.data?.quiz) {
-        setQuiz(response.data.quiz);
+      if (response?.success) {
+        setQuizId(response.quizId);
+        setCurrentQuizQuestion(response.question);
+        setQuestionNumber(response.questionNumber);
+        setTotalQuestions(response.totalQuestions);
+
         setShowQuiz(true);
-        setCurrentQuestion(0);
-        setSelectedAnswers([]);
         setShowResults(false);
-        console.log(
-          "✅ Quiz generated with",
-          response.data.quiz.length,
-          "questions"
-        );
+        setSelectedAnswer(null);
+        setLastResult(null);
+        setQuizHistory([]); // Clear history
+        setFinalScore(0);
+
+        console.log("✅ Quiz started with ID:", response.quizId);
       } else {
         alert(
-          "Failed to generate quiz. This feature requires Google Gemini API configuration."
+          "Failed to start quiz. This feature requires Google Gemini API configuration."
         );
       }
     } catch (err: any) {
-      console.error("❌ Error generating quiz:", err);
+      console.error("❌ Error starting quiz:", err);
       alert(
         "Quiz generation is not available yet. Please configure Google Gemini API in the backend."
       );
@@ -235,24 +200,70 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestion] = answerIndex;
-    setSelectedAnswers(newAnswers);
+    // Only set the single selected answer
+    setSelectedAnswer(answerIndex);
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestion < quiz.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-    } else {
-      setShowResults(true);
+  const handleSubmitAnswer = async () => {
+    if (selectedAnswer === null || !quizId || !currentQuizQuestion?.id) return;
+    if (isSubmitting) return; // Prevent double submit
+
+    try {
+      setIsSubmitting(true);
+      const response: any = await quizAPI.submitAnswer(
+        quizId,
+        currentQuizQuestion.id,
+        selectedAnswer
+      );
+
+      if (response?.success) {
+        // Store history for the results page
+        setQuizHistory((prev) => [
+          ...prev,
+          {
+            question: currentQuizQuestion,
+            answer: selectedAnswer,
+            result: response.result,
+          },
+        ]);
+        setLastResult(response.result); // Store for immediate feedback (if needed)
+
+        if (response.quizOver) {
+          console.log("✅ Quiz finished. Final Score:", response.finalScore);
+          setFinalScore(response.finalScore);
+          setShowResults(true);
+          setCurrentQuizQuestion(null);
+        } else {
+          // Load next question
+          setCurrentQuizQuestion(response.question);
+          setQuestionNumber(response.questionNumber);
+          setTotalQuestions(response.totalQuestions);
+          setSelectedAnswer(null); // Reset selection for the new question
+        }
+      } else {
+        alert("Failed to submit answer.");
+      }
+    } catch (err: any) {
+      console.error("❌ Error submitting answer:", err);
+      alert("An error occurred while submitting your answer.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => prev - 1);
-    }
+  const resetQuiz = () => {
+    setShowQuiz(false);
+    setShowResults(false);
+    setQuizId(null);
+    setCurrentQuizQuestion(null);
+    setSelectedAnswer(null);
+    setLastResult(null);
+    setQuizHistory([]);
+    setFinalScore(0);
+    setQuestionNumber(0);
   };
+
+  // --- END UPDATED QUIZ HANDLERS ---
 
   const handleBackToPart = () => {
     // Navigate back to the part articles page
@@ -273,23 +284,6 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
     }
   };
 
-  const calculateScore = () => {
-    let correct = 0;
-    selectedAnswers.forEach((answer, index) => {
-      if (quiz[index] && answer === quiz[index].correctAnswer) {
-        correct++;
-      }
-    });
-    return correct;
-  };
-
-  const resetQuiz = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers([]);
-    setShowResults(false);
-    setShowQuiz(false);
-  };
-
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
       "fundamental-rights": "from-blue-500 to-cyan-500",
@@ -303,54 +297,25 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
   const extractArticleNumberFromRelated = (
     relatedNumber: string
   ): string | null => {
-    console.log("🔍 Extracting article number from:", relatedNumber);
-
-    // Handle "Preamble"
-    if (relatedNumber.toLowerCase().includes("preamble")) {
-      return "0";
-    }
-
-    // Extract from "Article X" format
+    if (relatedNumber.toLowerCase().includes("preamble")) return "0";
     const articleMatch = relatedNumber.match(/Article\s+(\d+[A-Za-z]*)/i);
-    if (articleMatch) {
-      return articleMatch[1];
-    }
-
-    // Extract from "Part III (Articles X-Y)" format
+    if (articleMatch) return articleMatch[1];
     const partMatch = relatedNumber.match(
       /Part\s+[IVXLCDM]+\s*\(Articles?\s+(\d+)/i
     );
-    if (partMatch) {
-      return partMatch[1];
-    }
-
-    // If it's just a number
-    if (/^\d+[A-Za-z]*$/.test(relatedNumber.trim())) {
-      return relatedNumber.trim();
-    }
-
-    console.warn("⚠️ Could not extract article number from:", relatedNumber);
+    if (partMatch) return partMatch[1];
+    if (/^\d+[A-Za-z]*$/.test(relatedNumber.trim())) return relatedNumber.trim();
     return null;
   };
 
   const handleRelatedArticleClick = async (related: any) => {
-    console.log("🎯 Related article clicked:", related);
-
     const articleNumber = extractArticleNumberFromRelated(related.number);
-
     if (!articleNumber) {
       alert("Unable to navigate to this article. Invalid article reference.");
       return;
     }
-
-    console.log("🔢 Navigating to article:", articleNumber);
-
-    // Check if we need to fetch new articles list or if it's in current part
-    // For now, navigate without the full articles list (user can use back button to return)
     onNavigate("article", {
       articleNumber: articleNumber,
-      // Don't pass allArticles if navigating to a different part
-      // User will need to go back to part page for navigation controls
     });
   };
 
@@ -382,8 +347,11 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
 
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < allArticles.length - 1;
-  const previousArticle = hasPrevious ? allArticles[currentIndex - 1] : null;
-  const nextArticle = hasNext ? allArticles[currentIndex + 1] : null;
+
+  // WARNING: Your original file was missing the Quiz UI.
+  // You need to add the quiz JSX here, similar to what's in
+  // PartArticlesPage.tsx, to make the `handleStartQuiz` button
+  // and quiz modal appear.
 
   return (
     <div className="w-full max-w-6xl animate-fade-in pb-32">
