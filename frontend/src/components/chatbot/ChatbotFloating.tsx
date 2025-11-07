@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import React, { useState, useEffect, useRef } from 'react';
+import { MessageSquare, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { UserData } from '@/App';
 
 interface Message {
   id: string;
@@ -8,20 +11,59 @@ interface Message {
   timestamp: Date;
 }
 
-export const ChatbotFloating: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! I\'m your Constitutional AI Assistant. Ask me anything about the Indian Constitution!',
-      sender: 'bot',
-      timestamp: new Date()
-    }
-  ]);
-  const [inputValue, setInputValue] = useState('');
+interface ChatbotFloatingProps {
+  user: UserData | null; // Accept user from App.tsx
+}
+// NOTE: Use your actual backend URL here
+const CHAT_API_URL = 'http://localhost:5001/api/chatbot/chat';
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) =>{
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // NEW STATE: Store the unique conversation ID for multi-turn chat
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Ref for auto-scrolling
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to the latest message
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Initial greeting logic (runs once when component mounts)
+  useEffect(() => {
+    if (messages.length === 0) {
+      const initialMessage: Message = {
+        id: '1',
+        text: 'Hello! I\'m your Constitutional AI Assistant. Ask me anything about the Indian Constitution!',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages([initialMessage]);
+    }
+  }, []); // Empty dependency array ensures this runs only once
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    if (!user) {
+      const loginMessage: Message = {
+        id: Date.now().toString(),
+        text: "Please login first to chat with me.",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, loginMessage]);
+      return; // 
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -30,20 +72,80 @@ export const ChatbotFloating: React.FC = () => {
       timestamp: new Date()
     };
 
+    // 1. Update messages with user input and clear the input field
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setIsLoading(true);
 
-    // Simulate bot response (replace with actual AI integration later)
-    setTimeout(() => {
-      const botMessage: Message = {
+    try {
+      // 2. Construct the request body
+      const requestBody = {
+        prompt: inputValue,
+        sessionId: sessionId, // Send the current session ID, or null for the first request
+      };
+
+      // 3. Make the API call to your backend
+      const response = await fetch(CHAT_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Successful AI response
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.response,
+          sender: 'bot',
+          timestamp: new Date()
+        };
+
+        // Save the new session ID returned by the backend
+        setSessionId(data.sessionId);
+        setMessages(prev => [...prev, botMessage]);
+
+      } else {
+        // Handle backend error (e.g., missing API key, 500 server error)
+        const errorMessage = data.error || 'Sorry, I ran into an error. Please try again or check the server status.';
+        const errorBotMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: `❌ Error: ${errorMessage}`,
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorBotMessage]);
+      }
+    } catch (error) {
+      console.error('Frontend Fetch Error:', error);
+      const networkError: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'This is a demo response. AI integration coming soon! Your question will be answered by our advanced NLP model.',
+        text: '⚠️ Network error: Could not connect to the AI Assistant server.',
         sender: 'bot',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, botMessage]);
-    }, 1000);
+      setMessages(prev => [...prev, networkError]);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleClearChat = () => {
+    // Clear chat history and reset session ID
+    setMessages([
+      {
+        id: '1',
+        text: 'Hello! I\'m your Constitutional AI Assistant. Ask me anything about the Indian Constitution!',
+        sender: 'bot',
+        timestamp: new Date()
+      }
+    ]);
+    setSessionId(null);
+    // Optionally call the backend to invalidate the session ID if you implement a /clear-chat endpoint
+  }
 
   return (
     <>
@@ -73,6 +175,14 @@ export const ChatbotFloating: React.FC = () => {
               </div>
             </div>
             <button
+              // Added Clear Chat Button
+              onClick={handleClearChat}
+              title="Start New Chat"
+              className="p-2 rounded-full hover:bg-white/20 transition-colors mr-2"
+            >
+              <Bot className="w-5 h-5 text-white transform rotate-180" />
+            </button>
+            <button
               onClick={() => setIsOpen(false)}
               className="p-2 rounded-full hover:bg-white/20 transition-colors"
             >
@@ -93,13 +203,24 @@ export const ChatbotFloating: React.FC = () => {
                   </div>
                 )}
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                    message.sender === 'user'
+                  className={`max-w-[75%] rounded-2xl px-4 py-2 ${message.sender === 'user'
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
                       : 'bg-slate-700 text-slate-100'
-                  }`}
+                    }`}
                 >
-                  <p className="text-sm">{message.text}</p>
+                  {/* 👇 CONDITIONAL RENDERING FOR MARKDOWN PARSING 👇 */}
+                  {message.sender === 'user' ? (
+                    // User input (mostly plain text)
+                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                  ) : (
+                    // Bot response (parsed as Markdown)
+                    <div className="prose prose-sm text-slate-100 max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.text}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                  {/* 👆 END CONDITIONAL RENDERING 👆 */}
                 </div>
                 {message.sender === 'user' && (
                   <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0">
@@ -108,6 +229,19 @@ export const ChatbotFloating: React.FC = () => {
                 )}
               </div>
             ))}
+
+            {/* NEW: Typing Indicator */}
+            {isLoading && (
+              <div className="flex justify-start gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div className="max-w-[75%] bg-slate-700 text-slate-100 rounded-2xl px-4 py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-slate-300" />
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
@@ -120,16 +254,18 @@ export const ChatbotFloating: React.FC = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Ask about Constitution..."
                 className="flex-1 bg-slate-700 border border-slate-600 rounded-full px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                disabled={isLoading} // Disable input while loading
               />
               <button
                 onClick={handleSend}
-                className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform"
+                className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-50"
+                disabled={isLoading} // Disable button while loading
               >
                 <Send className="w-5 h-5" />
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-2 text-center">
-              AI integration in progress
+              Powered by SmartSanstha AI
             </p>
           </div>
         </div>

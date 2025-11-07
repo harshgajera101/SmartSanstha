@@ -1,6 +1,10 @@
 import axios from 'axios';
 
+// --- CONFIGURATION ---
 const API_BASE_URL = 'http://localhost:5001/api';
+// Ensure withCredentials is set for authorization (used in recommendation logic)
+const WITH_CREDENTIALS = true; 
+// ---------------------
 
 console.log('🔗 Connecting to API:', API_BASE_URL);
 
@@ -9,7 +13,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 90000,
+  withCredentials: WITH_CREDENTIALS, // Kept for recommendations and auth
 });
 
 // Request interceptor
@@ -28,7 +33,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     console.log('✅ Got response from:', response.config.url);
-    return response.data;
+    return response.data; // This is correct
   },
   (error) => {
     console.error('❌ API Error:', error.message);
@@ -40,16 +45,21 @@ api.interceptors.response.use(
   }
 );
 
-// Article APIs
+// =================================================================
+// 📚 Article APIs (Includes all routes + recommendation)
+// =================================================================
 export const articleAPI = {
   getAllParts: () => api.get('/articles/parts'),
   getArticlesByPart: (part: string) => api.get(`/articles/part/${encodeURIComponent(part)}`),
   getArticle: (articleNumber: string) => api.get(`/articles/${articleNumber}`),
   searchArticles: (query: string) => api.get('/articles/search', { params: { q: query } }),
-  getAllSubjects: () => api.get('/articles/subjects'), // New endpoint
+  getAllSubjects: () => api.get('/articles/subjects'), 
+  getRecommendations: () => api.get('/articles/recommendations'), // From recommendation logic
 };
 
-// Chatbot APIs
+// =================================================================
+// 🤖 Chatbot APIs
+// =================================================================
 export const chatbotAPI = {
   sendMessage: (message: string, sessionId: string) =>
     api.post('/chatbot/chat', { message, sessionId }),
@@ -58,14 +68,28 @@ export const chatbotAPI = {
     api.post('/chatbot/article-question', { articleNumber, question }),
 };
 
-// Quiz APIs
+// =================================================================
+// 📝 Quiz APIs (Corrected to match quizRoutes.js)
+// =================================================================
 export const quizAPI = {
-  generateFromPart: (part: string, questionCount: number = 5) =>
-    api.post('/quiz/from-part', { part, questionCount }),
-  generateFromArticle: (articleNumber: string, questionCount: number = 5) =>
-    api.post('/quiz/from-article', { articleNumber, questionCount }),
-  generateRandom: (questionCount: number = 5, category?: string) =>
-    api.get('/quiz/random', { params: { questionCount, category } }),
-};
+  /**
+   * Starts a new adaptive quiz session for a given part.
+   * NOTE: Backend route is /api/quiz/start (as per quizRoutes.js)
+   */
+  startQuiz: (part: string) => 
+    api.post('/quiz/start', { part }), // Corrected to /quiz/start to match quizRoutes.js
 
-export default api;
+  /**
+   * Submits an answer and gets the result + the next question.
+   */
+  submitAnswer: (quizId: string, questionId: string, answerIndex: number) =>
+    api.post('/quiz/answer', { quizId, questionId, answerIndex }),
+  
+  /**
+   * Generates a quiz based on a specific article.
+   * NOTE: You should confirm if you want to implement the generateFromArticle endpoint
+    * in your quizRoutes.js. If you do, the route should be defined in quizRoutes.js.
+   */
+  generateFromArticle: (articleNumber: string) =>
+    api.post('/quiz/from-article', { articleNumber }), // This needs a corresponding route in quizRoutes.js if used
+};
