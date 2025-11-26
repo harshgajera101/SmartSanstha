@@ -67,6 +67,38 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+
+// // =================================================================
+// // CORS CONFIGURATION (Fix for deployed frontend)
+// // =================================================================
+// const allowedOrigins = [
+//   'http://localhost:5173',                      // local development
+//   process.env.FRONTEND_ORIGIN,                 // Render frontend URL
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin) return callback(null, true); // allow tools / mobile apps
+
+//       if (allowedOrigins.includes(origin)) {
+//         return callback(null, true);
+//       }
+
+//       console.log('❌ CORS blocked for origin:', origin);
+//       return callback(new Error('Not allowed by CORS'));
+//     },
+//     credentials: true, // REQUIRED for cookies & auth
+//   })
+// );
+
+// app.options('*', cors({
+//   origin: allowedOrigins,
+//   credentials: true,
+// }));
+
+
+
 // Mount route modules
 app.use('/api/articles', articleRoutes);
 app.use('/api/chatbot', chatbotRoutes);
