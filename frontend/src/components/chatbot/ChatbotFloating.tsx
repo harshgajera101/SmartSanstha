@@ -288,9 +288,6 @@
 
 
 
-
-
-
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import React, { useState, useEffect, useRef } from 'react';
@@ -305,10 +302,10 @@ interface Message {
 }
 
 interface ChatbotFloatingProps {
-  user: UserData | null; // Accept user from App.tsx
+  user: UserData | null;
 }
 
-// ✅ Use the same env style as api.ts
+// ✅ Use the SAME env variable as api.ts
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
@@ -319,11 +316,8 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Unique conversation ID for multi-turn chat
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // Ref for auto-scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -334,7 +328,6 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Initial greeting logic (runs once when component mounts)
   useEffect(() => {
     if (messages.length === 0) {
       const initialMessage: Message = {
@@ -345,7 +338,6 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
       };
       setMessages([initialMessage]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSend = async () => {
@@ -358,7 +350,7 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
         sender: 'bot',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, loginMessage]);
+      setMessages((prev) => [...prev, loginMessage]);
       return;
     }
 
@@ -369,14 +361,15 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsLoading(true);
 
     try {
-      // 🔹 Align with backend & api.ts: send "message", not "prompt"
+      // ✅ EXACTLY what backend expects: prompt + sessionId
       const requestBody = {
-        message: inputValue,
+        prompt: currentInput,
         sessionId: sessionId,
       };
 
@@ -386,67 +379,50 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
-        credentials: 'include', // keep cookies if backend ever uses them
+        credentials: 'include', // send cookies for auth if used
       });
 
-      // Read raw text first → works for both JSON and plain text
-      const rawText = await response.text().catch(() => '');
-
       if (!response.ok) {
-        throw new Error(
-          `Chatbot error ${response.status}: ${rawText || 'No error body'}`
-        );
+        const text = await response.text().catch(() => '');
+        throw new Error(`Chatbot error ${response.status}: ${text}`);
       }
 
-      // Try to parse JSON, but don't force it
-      let parsed: any = null;
-      if (rawText) {
-        try {
-          parsed = JSON.parse(rawText);
-        } catch {
-          parsed = null; // not JSON; treat as plain text
+      const data = await response.json();
+
+      if (data.success) {
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.response,
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+
+        if (data.sessionId) {
+          setSessionId(data.sessionId);
         }
-      }
 
-      let botText: string;
-      let newSessionId: string | null = null;
-
-      if (parsed && typeof parsed === 'object') {
-        // support multiple possible keys from backend
-        botText =
-          parsed.response ||
-          parsed.answer ||
-          parsed.message ||
-          rawText ||
-          'I could not generate a response.';
-        newSessionId = parsed.sessionId || parsed.session_id || null;
+        setMessages((prev) => [...prev, botMessage]);
       } else {
-        // plain text reply
-        botText = rawText || 'I could not generate a response.';
+        const errorMessage =
+          data.error ||
+          'Sorry, I ran into an error. Please try again or check the server status.';
+        const errorBotMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: `❌ Error: ${errorMessage}`,
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorBotMessage]);
       }
-
-      if (newSessionId) {
-        setSessionId(newSessionId);
-      }
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: botText,
-        sender: 'bot',
-        timestamp: new Date(),
-      };
-
-      setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Frontend Fetch Error:', error);
       const networkError: Message = {
         id: (Date.now() + 1).toString(),
-        text:
-          '⚠️ Network / server error: Could not connect to the AI Assistant. Please try again.',
+        text: '⚠️ Network error: Could not connect to the AI Assistant server.',
         sender: 'bot',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, networkError]);
+      setMessages((prev) => [...prev, networkError]);
     } finally {
       setIsLoading(false);
     }
@@ -466,7 +442,6 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
 
   return (
     <>
-      {/* Floating Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -477,10 +452,8 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
         </button>
       )}
 
-      {/* Chat Window */}
       {isOpen && (
         <div className="fixed bottom-6 right-6 z-50 w-96 h-[500px] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 flex flex-col animate-bounce-in">
-          {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-red-500 rounded-t-2xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -506,15 +479,12 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map(message => (
+            {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex gap-2 ${
-                  message.sender === 'user'
-                    ? 'justify-end'
-                    : 'justify-start'
+                  message.sender === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
                 {message.sender === 'bot' && (
@@ -549,7 +519,6 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
               </div>
             ))}
 
-            {/* Typing Indicator */}
             {isLoading && (
               <div className="flex justify-start gap-2">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
@@ -563,14 +532,13 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
           <div className="p-4 border-t border-slate-700">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={inputValue}
-                onChange={e => setInputValue(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Ask about Constitution..."
                 className="flex-1 bg-slate-700 border border-slate-600 rounded-full px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 disabled={isLoading}

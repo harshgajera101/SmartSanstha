@@ -65,8 +65,8 @@ export const articleAPI = {
 // 🤖 Chatbot APIs
 // =================================================================
 export const chatbotAPI = {
-  sendMessage: (message: string, sessionId: string) =>
-    api.post('/chatbot/chat', { message, sessionId }),
+  sendMessage: (prompt: string, sessionId: string) =>
+    api.post('/chatbot/chat', { prompt, sessionId }),
   clearHistory: (sessionId: string) => api.delete(`/chatbot/history/${sessionId}`),
   askAboutArticle: (articleNumber: string, question: string) =>
     api.post('/chatbot/article-question', { articleNumber, question }),
