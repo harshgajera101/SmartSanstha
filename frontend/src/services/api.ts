@@ -1,9 +1,13 @@
 import axios from 'axios';
 
 // --- CONFIGURATION ---
-const API_BASE_URL = 'http://localhost:5001/api';
+// Take base URL from environment (Render / production),
+// fallback to localhost for local development.
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+
 // Ensure withCredentials is set for authorization (used in recommendation logic)
-const WITH_CREDENTIALS = true; 
+const WITH_CREDENTIALS = true;
 // ---------------------
 
 console.log('🔗 Connecting to API:', API_BASE_URL);
@@ -53,7 +57,7 @@ export const articleAPI = {
   getArticlesByPart: (part: string) => api.get(`/articles/part/${encodeURIComponent(part)}`),
   getArticle: (articleNumber: string) => api.get(`/articles/${articleNumber}`),
   searchArticles: (query: string) => api.get('/articles/search', { params: { q: query } }),
-  getAllSubjects: () => api.get('/articles/subjects'), 
+  getAllSubjects: () => api.get('/articles/subjects'),
   getRecommendations: () => api.get('/articles/recommendations'), // From recommendation logic
 };
 
@@ -69,27 +73,12 @@ export const chatbotAPI = {
 };
 
 // =================================================================
-// 📝 Quiz APIs (Corrected to match quizRoutes.js)
+// 📝 Quiz APIs
 // =================================================================
 export const quizAPI = {
-  /**
-   * Starts a new adaptive quiz session for a given part.
-   * NOTE: Backend route is /api/quiz/start (as per quizRoutes.js)
-   */
-  startQuiz: (part: string) => 
-    api.post('/quiz/start', { part }), // Corrected to /quiz/start to match quizRoutes.js
-
-  /**
-   * Submits an answer and gets the result + the next question.
-   */
+  startQuiz: (part: string) => api.post('/quiz/start', { part }),
   submitAnswer: (quizId: string, questionId: string, answerIndex: number) =>
     api.post('/quiz/answer', { quizId, questionId, answerIndex }),
-  
-  /**
-   * Generates a quiz based on a specific article.
-   * NOTE: You should confirm if you want to implement the generateFromArticle endpoint
-    * in your quizRoutes.js. If you do, the route should be defined in quizRoutes.js.
-   */
   generateFromArticle: (articleNumber: string) =>
-    api.post('/quiz/from-article', { articleNumber }), // This needs a corresponding route in quizRoutes.js if used
+    api.post('/quiz/from-article', { articleNumber }),
 };
