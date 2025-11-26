@@ -14,12 +14,15 @@ const createRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES || '7d' });
 };
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const cookieOptions = {
   httpOnly: true,
-  // secure: true, // enable in production with https
-  sameSite: 'lax',
-  // domain: process.env.COOKIE_DOMAIN || 'localhost',
+  secure: isProduction,                     // true on Render (https), false locally
+  sameSite: isProduction ? 'none' : 'lax',  // 'none' needed for cross-origin cookies
+  // domain: process.env.COOKIE_DOMAIN || 'localhost', // optional, not required for Render
 };
+
 
 export const registerUser = async (req, res) => {
   try {

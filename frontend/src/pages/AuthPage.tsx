@@ -98,6 +98,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, dob, email, password, confirmPassword }),
+        credentials: 'include',
       });
       const data = await response.json();
       
