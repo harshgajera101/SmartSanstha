@@ -94,7 +94,13 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) =>{
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
+        credentials: 'include',
       });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(`Chatbot error ${response.status}: ${text}`);
+      }
 
       const data = await response.json();
 

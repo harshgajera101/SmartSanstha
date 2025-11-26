@@ -20,6 +20,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: isProduction,                     // true on Render (https), false locally
   sameSite: isProduction ? 'none' : 'lax',  // 'none' needed for cross-origin cookies
+  path: '/',                                // 🔴 IMPORTANT: send cookie to ALL routes
   // domain: process.env.COOKIE_DOMAIN || 'localhost', // optional, not required for Render
 };
 
@@ -123,8 +124,8 @@ export const loginAdmin = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
+  res.clearCookie('accessToken', { path: '/' });
+  res.clearCookie('refreshToken', { path: '/' });
   return res.json({ message: 'Logged out' });
 };
 
