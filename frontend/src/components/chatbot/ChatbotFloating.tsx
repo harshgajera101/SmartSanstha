@@ -310,7 +310,7 @@ interface ChatbotFloatingProps {
 
 // ✅ Use the same env style as api.ts
 const API_BASE_URL =
-  import.meta.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 const CHAT_API_URL = `${API_BASE_URL}/chatbot/chat`;
 

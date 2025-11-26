@@ -7,21 +7,27 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const createAccessToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES || '15m' });
+  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRES || '15m',
+  });
 };
 
 const createRefreshToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES || '7d' });
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRES || '7d',
+  });
 };
 
-const isProduction = process.env.NODE_ENV === 'production';
+// ✅ Treat Render as production too
+const isProduction =
+  process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
 const cookieOptions = {
   httpOnly: true,
-  secure: isProduction,                     // true on Render (https), false locally
-  sameSite: isProduction ? 'none' : 'lax',  // 'none' needed for cross-origin cookies
-  path: '/',                                // 🔴 IMPORTANT: send cookie to ALL routes
-  // domain: process.env.COOKIE_DOMAIN || 'localhost', // optional, not required for Render
+  secure: isProduction,                    // true on Render (HTTPS), false locally
+  sameSite: isProduction ? 'none' : 'lax', // NONE for cross-site cookies from frontend → backend
+  path: '/',                               // send to all routes
+  // domain: process.env.COOKIE_DOMAIN,    // optional; fine to omit on Render
 };
 
 
@@ -124,8 +130,8 @@ export const loginAdmin = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  res.clearCookie('accessToken', { path: '/' });
-  res.clearCookie('refreshToken', { path: '/' });
+  res.clearCookie('accessToken', { ...cookieOptions });
+  res.clearCookie('refreshToken', { ...cookieOptions });
   return res.json({ message: 'Logged out' });
 };
 

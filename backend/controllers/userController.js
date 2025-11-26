@@ -41,8 +41,11 @@ export const deleteAccount = async (req, res) => {
   try {
     const userId = req.user.id;
     await User.findByIdAndDelete(userId);
+
+    // Use same options as when setting cookies
     res.clearCookie('accessToken', { path: '/' });
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', { path: '/' });
+
     return res.json({ message: 'Account deleted' });
   } catch (err) {
     console.error(err);
