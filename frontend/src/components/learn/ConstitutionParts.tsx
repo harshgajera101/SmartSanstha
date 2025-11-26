@@ -15,8 +15,14 @@ export const ConstitutionParts: React.FC<ConstitutionPartsProps> = ({
   selectedCategory,
   onNavigate = () => {}
 }) => {
-  // Don't filter again - parts are already filtered in parent component
-  const filteredParts = parts;
+  const filteredParts = parts.filter((part) => {
+    const matchesSearch =
+      part.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      part.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === 'all' || part.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const difficultyColors = {
     beginner: 'from-teal-500 to-emerald-600',    
@@ -45,7 +51,7 @@ export const ConstitutionParts: React.FC<ConstitutionPartsProps> = ({
     <div>
       <div className="flex items-center gap-3 mb-6">
         <FileText className="w-6 h-6 text-orange-400" />
-        <h2 className="text-3xl font-bold text-white">All Constitution Parts</h2>
+        <h2 className="text-3xl font-bold text-white">Constitution Parts</h2>
         <span className="text-slate-500">({filteredParts.length} parts)</span>
       </div>
 
@@ -65,6 +71,9 @@ export const ConstitutionParts: React.FC<ConstitutionPartsProps> = ({
                   } rounded-xl flex items-center justify-center font-bold text-white text-lg group-hover:scale-110 transition-transform`}>
                     {part.partNumber !== undefined ? part.partNumber : '?'}
                   </div>
+                  {/* <div className="text-slate-400">
+                    {categoryIcons[part.category] || categoryIcons['other']}
+                  </div> */}
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${
                   difficultyColors[part.difficulty as keyof typeof difficultyColors] || difficultyColors.intermediate
