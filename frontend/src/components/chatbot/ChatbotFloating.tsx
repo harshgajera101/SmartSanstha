@@ -14,8 +14,11 @@ interface Message {
 interface ChatbotFloatingProps {
   user: UserData | null; // Accept user from App.tsx
 }
+
+const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+
 // NOTE: Use your actual backend URL here
-const CHAT_API_URL = 'http://localhost:5001/api/chatbot/chat';
+const CHAT_API_URL = `${API_BASE_URL}/chatbot/chat`;
 
 export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) =>{
   const [isOpen, setIsOpen] = useState(false);

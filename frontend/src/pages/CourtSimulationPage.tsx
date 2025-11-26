@@ -37,7 +37,7 @@ interface CourtSimulationPageProps {
   onNavigate: (page: string) => void;
 }
 
-const API_BASE_URL = import.meta.env.VITE_AUTH_API_BASE_URL;
+const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
 
 export const CourtSimulationPage: React.FC<CourtSimulationPageProps> = ({
   onNavigate,
