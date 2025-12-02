@@ -68,6 +68,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [ageError, setAgeError] = useState<string | null>(null);
   
   // Get the API base URL from the environment variable
   const API_URL = import.meta.env.VITE_AUTH_API_BASE_URL;
@@ -76,11 +77,38 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
     setIsLoginView(!isLoginView);
     setError(null);
     setSuccess(null);
+    setAgeError(null);
     setEmail('');
     setPassword('');
     setName('');
     setDob('');
     setConfirmPassword('');
+  };
+  const calculateAge = (birthDateString: string): number => {
+    const today = new Date();
+    const birthDate = new Date(birthDateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDob = e.target.value;
+    setDob(selectedDob);
+    
+    if (selectedDob) {
+      const age = calculateAge(selectedDob);
+      if (age < 18) {
+        setAgeError('You must be at least 18 years old to register.');
+      } else {
+        setAgeError(null);
+      }
+    } else {
+      setAgeError(null);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -89,9 +117,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       setError("Passwords do not match.");
       return;
     }
+     if (dob && calculateAge(dob) < 18) {
+      setError("You must be at least 18 years old to register.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     setSuccess(null);
+    setAgeError(null);
     
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
@@ -178,14 +211,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
-              <InputField
-                icon={<Calendar className="w-5 h-5" />}
-                type="date"
-                required
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-              />
+              <div>
+                <InputField
+                  icon={<Calendar className="w-5 h-5" />}
+                  type="date"
+                  required
+                  value={dob}
+                  onChange={handleDobChange}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                />
+                {ageError && <p className="text-xs text-red-400 mt-1 ml-1">{ageError}</p>}
+              </div>
             </>
           )}
           <InputField
