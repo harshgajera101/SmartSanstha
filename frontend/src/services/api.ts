@@ -4,7 +4,7 @@ import axios from 'axios';
 // Take base URL from environment (Render / production),
 // fallback to localhost for local development.
 const API_BASE_URL =
-  import.meta.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 // Ensure withCredentials is set for authorization (used in recommendation logic)
 const WITH_CREDENTIALS = true;
