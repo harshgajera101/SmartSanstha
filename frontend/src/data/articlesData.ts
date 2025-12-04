@@ -1,127 +1,76 @@
-// import { ArticleCard, ConstitutionPart } from '../types';
+import { ArticleData } from "../types";
 
-// export const ARTICLE_DATA: ArticleCard[] = [
-//   { uid: '1', article: "Article 12", expl: "Defines the meaning of 'State' under Fundamental Rights." },
-//   { uid: '2', article: "Article 14", expl: "Guarantees equality before the law and equal protection of the laws." },
-//   { uid: '3', article: "Article 19", expl: "Protects freedoms like speech, assembly, association — subject to reasonable restrictions." },
-//   { uid: '4', article: "Article 21", expl: "Right to life and personal liberty — a broad protection covering many derived rights." },
-//   { uid: '5', article: "Article 32", expl: "Right to constitutional remedies — approach the Supreme Court for enforcement of Fundamental Rights." },
-//   { uid: '6', article: "Article 368", expl: "Procedure for amending the Constitution — special majority and conditions for some amendments." },
-//   { uid: '7', article: "Article 370", expl: "(Historic) Special status clause — now abrogated in 2019." },
-//   { uid: '8', article: "Article 51A", expl: "Fundamental duties of citizens, such as respecting the Constitution." }
-// ];
-
-// export const CONSTITUTION_PARTS: ConstitutionPart[] = [
-//   {
-//     id: 'part-1',
-//     partNumber: 1,
-//     title: 'The Union and Its Territory',
-//     description: 'Defines India as a Union of States and describes the territory of India.',
-//     articles: ['Article 1', 'Article 2', 'Article 3', 'Article 4'],
-//     totalArticles: 4,
-//     category: 'union',
-//     difficulty: 'beginner'
-//   },
-//   {
-//     id: 'part-2',
-//     partNumber: 2,
-//     title: 'Citizenship',
-//     description: 'Deals with citizenship of India at the commencement of the Constitution.',
-//     articles: ['Article 5', 'Article 6', 'Article 7', 'Article 8', 'Article 9', 'Article 10', 'Article 11'],
-//     totalArticles: 7,
-//     category: 'other',
-//     difficulty: 'beginner'
-//   },
-//   {
-//     id: 'part-3',
-//     partNumber: 3,
-//     title: 'Fundamental Rights',
-//     description: 'Guarantees basic rights to all citizens, including equality, freedom, and protection against discrimination.',
-//     articles: ['Article 12-35'],
-//     totalArticles: 24,
-//     category: 'fundamental-rights',
-//     difficulty: 'beginner'
-//   },
-//   {
-//     id: 'part-4',
-//     partNumber: 4,
-//     title: 'Directive Principles of State Policy',
-//     description: 'Guidelines for the framing of laws by the government, aimed at establishing social and economic democracy.',
-//     articles: ['Article 36-51'],
-//     totalArticles: 16,
-//     category: 'directive-principles',
-//     difficulty: 'intermediate'
-//   },
-//   {
-//     id: 'part-5',
-//     partNumber: 5,
-//     title: 'The Union',
-//     description: 'Deals with the Union Government, including the President, Parliament, and Supreme Court.',
-//     articles: ['Article 52-151'],
-//     totalArticles: 100,
-//     category: 'union',
-//     difficulty: 'intermediate'
-//   },
-//   // Add remaining parts (6-25) here...
-// ];
-
-// export const RECOMMENDED_ARTICLES = [
-//   {
-//     id: 'rec-1',
-//     article: 'Article 14',
-//     title: 'Equality Before Law',
-//     summary: 'Learn about the fundamental principle of equality and how it protects every citizen.',
-//     readTime: 5,
-//     category: 'fundamental-rights'
-//   },
-//   {
-//     id: 'rec-2',
-//     article: 'Article 21',
-//     title: 'Right to Life',
-//     summary: 'Discover the most important fundamental right that forms the foundation of human dignity.',
-//     readTime: 7,
-//     category: 'fundamental-rights'
-//   },
-//   {
-//     id: 'rec-3',
-//     article: 'Article 19',
-//     title: 'Freedom of Speech',
-//     summary: 'Understand your right to express yourself and the reasonable restrictions on it.',
-//     readTime: 6,
-//     category: 'fundamental-rights'
-//   }
-// ];
-
-// This file provides dummy data structure
-// Real data will come from backend API
-
-export const CONSTITUTION_PARTS = [
+export const ARTICLE_DATA: ArticleData[] = [
   {
-    id: 'part-preamble',
-    partNumber: 0,
-    title: 'Preamble',
-    description: 'The introduction to the Constitution outlining its guiding principles',
-    articles: [],
-    totalArticles: 1,
-    category: 'fundamental-rights',
-    difficulty: 'beginner'
-  }
-];
-
-export const RECOMMENDED_ARTICLES = [
+    article: "Article 14",
+    summary: "Guarantees equality to every person before the law within the territory of India.",
+    details: [
+      { title: "Equality Before Law", text: "Means that no person is above the law and all are subject to the same ordinary law." },
+      { title: "Equal Protection of Laws", text: "Means that all persons in similar circumstances should be treated alike." }
+    ]
+  },
   {
-    id: 'article-14',
-    article: 'Article 14',
-    title: 'Equality before law',
-    summary: 'Guarantees equality before the law',
-    readTime: 5,
-    category: 'fundamental-rights'
-  }
-];
-
-export const ARTICLE_DATA = [
+    article: "Article 15",
+    summary: "Prohibits discrimination on grounds of religion, race, caste, sex or place of birth.",
+    details: [
+      { title: "No Discrimination", text: "The State cannot discriminate against any citizen on the specified grounds." },
+      { title: "Access to Public Places", text: "Ensures all citizens have equal access to shops, public restaurants, and places of public entertainment." }
+    ]
+  },
   {
-    article: '14',
-    expl: 'Equality before law'
+    article: "Article 17",
+    summary: "Abolishes 'Untouchability' and forbids its practice in any form.",
+    details: [
+      { title: "Abolition", text: "Makes the practice of untouchability a punishable offense." },
+      { title: "Social Justice", text: "A key article aimed at ending historical social injustices and promoting equality." }
+    ]
+  },
+  {
+    article: "Article 19",
+    summary: "Protects six fundamental rights related to freedom.",
+    details: [
+      { title: "Key Freedoms", text: "Includes freedom of speech, assembly, association, movement, residence, and profession." },
+      { title: "Reasonable Restrictions", text: "These rights are not absolute and can be restricted on grounds like public order and security." }
+    ]
+  },
+  {
+    article: "Article 21",
+    summary: "Protects the right to life and personal liberty.",
+    details: [
+      { title: "Right to Life", text: "This is not merely animal existence but the right to live with human dignity." },
+      { title: "Broad Interpretation", text: "The Supreme Court has expanded this right to include the right to education, health, and a clean environment." }
+    ]
+  },
+  {
+    article: "Article 25",
+    summary: "Guarantees the freedom of conscience and the right to freely profess, practice, and propagate religion.",
+    details: [
+      { title: "Religious Freedom", text: "All persons are equally entitled to freedom of conscience and religion." },
+      { title: "Subject to Public Order", text: "This right is subject to public order, morality, and health." }
+    ]
+  },
+  {
+    article: "Article 32",
+    summary: "Grants the right to move to the Supreme Court for the enforcement of fundamental rights.",
+    details: [
+      { title: "Heart and Soul", text: "Dr. B.R. Ambedkar called this article the 'heart and soul' of the Constitution." },
+      { title: "Writs", text: "The Supreme Court can issue writs like Habeas Corpus, Mandamus, etc., to enforce rights." }
+    ]
+  },
+  {
+    article: "Article 40",
+    summary: "Directs the State to organize village panchayats as units of self-government.",
+    details: [
+      { title: "Directive Principle", text: "This is a Gandhian principle aimed at decentralizing power." },
+      { title: "Panchayati Raj", text: "Led to the 73rd Amendment, which gave constitutional status to Panchayati Raj institutions." }
+    ]
+  },
+  {
+    article: "Article 51A",
+    summary: "Lays down the Fundamental Duties of all citizens of India.",
+    details: [
+      { title: "Civic Responsibility", text: "Includes duties like respecting the Constitution, promoting harmony, and protecting public property." },
+      { title: "Not Enforceable by Courts", text: "While not legally enforceable, they are crucial for responsible citizenship." }
+    ]
   }
 ];

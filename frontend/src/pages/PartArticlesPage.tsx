@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  Loader, 
-  AlertCircle, 
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Loader,
+  AlertCircle,
   Search,
   Brain,
   Target,
@@ -12,41 +12,52 @@ import {
   CheckCircle,
   XCircle,
   Award,
-  RotateCcw
-} from 'lucide-react';
-import { Card } from '../components/common/Card';
-import { ArticleCard } from '../components/learn/ArticleCard';
-import { Button } from '../components/common/Button';
-import { ProgressBar } from '../components/common/ProgressBar';
-import { articleAPI, quizAPI } from '../services/api';
+  RotateCcw,
+} from "lucide-react";
+import { Card } from "../components/common/Card";
+import { ArticleCard } from "../components/learn/ArticleCard";
+import { Button } from "../components/common/Button";
+import { ProgressBar } from "../components/common/ProgressBar";
+import { articleAPI, quizAPI } from "../services/api";
 
 interface PartArticlesPageProps {
   onNavigate: (page: string, data?: any) => void;
-  partData?: { 
+  partData?: {
     partName: string;
     partTitle: string;
   };
 }
 
-export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, partData }) => {
+export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({
+  onNavigate,
+  partData,
+}) => {
   const [articles, setArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  // Quiz state
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // --- NEW ADAPTIVE QUIZ STATE ---
   const [showQuiz, setShowQuiz] = useState(false);
-  const [quiz, setQuiz] = useState<any[]>([]);
   const [quizLoading, setQuizLoading] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
+
+  const [quizId, setQuizId] = useState<string | null>(null);
+  const [currentQuizQuestion, setCurrentQuizQuestion] = useState<any>(null); // Single question
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null); // Single answer
+  const [lastResult, setLastResult] = useState<any>(null); // For immediate feedback
+  const [quizHistory, setQuizHistory] = useState<any[]>([]); // To show results
+  const [finalScore, setFinalScore] = useState(0);
+  const [questionNumber, setQuestionNumber] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Loader for submit
+  // --- END NEW QUIZ STATE ---
 
   useEffect(() => {
     if (partData?.partName) {
       fetchArticlesByPart(partData.partName);
     } else {
-      setError('No part name provided');
+      setError("No part name provided");
       setLoading(false);
     }
   }, [partData]);
@@ -56,133 +67,166 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
       setLoading(true);
       setError(null);
       console.log(`📚 Fetching articles for part: ${partName}`);
-      
+
       const response: any = await articleAPI.getArticlesByPart(partName);
-      
-      console.log('Response received:', response);
-      
+
       if (response?.success) {
         setArticles(response.data || []);
-        console.log(`✅ Loaded ${response.data?.length || 0} articles`);
       } else {
-        setError('Failed to load articles');
+        setError("Failed to load articles");
       }
     } catch (err: any) {
-      console.error('❌ Error fetching articles:', err);
-      setError('Failed to load articles. Please try again.');
+      console.error("❌ Error fetching articles:", err);
+      setError("Failed to load articles. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleArticleClick = (article: any, index: number) => {
-  console.log('🎯 Article clicked:', article);
-  console.log('📋 All articles:', articles);
-  console.log('🔢 Index:', index);
-  
-  // Extract article number
-  let articleNumber = '';
-  
-  if (article.article === 'Preamble') {
-    articleNumber = '0';
-  } else {
-    const match = article.article?.match(/Article\s+(\d+)/);
-    if (match) {
-      articleNumber = match[1];
-    } else if (article.id) {
-      const idMatch = article.id.match(/article-(\d+)/);
-      if (idMatch) {
-        articleNumber = idMatch[1];
+    let articleNumber = "";
+
+    if (article.article === "Preamble") {
+      articleNumber = "0";
+    } else {
+      const match = article.article?.match(/Article\s+(\d+)/);
+      if (match) {
+        articleNumber = match[1];
+      } else if (article.id) {
+        const idMatch = article.id.match(/article-(\d+)/);
+        if (idMatch) {
+          articleNumber = idMatch[1];
+        }
       }
     }
-  }
 
-  console.log('🔢 Extracted article number:', articleNumber);
+    if (articleNumber) {
+      onNavigate("article", {
+        articleNumber,
+        allArticles: articles,
+        currentIndex: index,
+        partName: partData?.partName,
+        partTitle: partData?.partTitle,
+      });
+    } else {
+      alert("Unable to open this article");
+    }
+  };
 
-  if (articleNumber) {
-    // Navigate with all articles data AND part info for proper back navigation
-    onNavigate('article', {
-      articleNumber,
-      allArticles: articles,
-      currentIndex: index,
-      partName: partData?.partName,      // Pass part name
-      partTitle: partData?.partTitle     // Pass part title
-    });
-  } else {
-    console.error('❌ Could not extract article number from:', article);
-    alert('Unable to open this article');
-  }
-};
+  // --- UPDATED QUIZ HANDLERS ---
 
   const handleStartQuiz = async () => {
     try {
       setQuizLoading(true);
-      console.log(`🎯 Generating quiz for part: ${partData?.partName}...`);
-      
-      const response: any = await quizAPI.generateFromPart(
-        partData?.partName || '',
-        10
-      );
-      
-      if (response?.success && response?.data?.quiz) {
-        setQuiz(response.data.quiz);
+      const topic = partData?.partName || "";
+      console.log(`🎯 Starting quiz for part: ${topic}...`);
+
+      const response: any = await quizAPI.startQuiz(topic);
+
+      if (response?.success) {
+        setQuizId(response.quizId);
+        setCurrentQuizQuestion(response.question);
+        setQuestionNumber(response.questionNumber);
+        setTotalQuestions(response.totalQuestions);
+
         setShowQuiz(true);
-        setCurrentQuestion(0);
-        setSelectedAnswers([]);
         setShowResults(false);
-        console.log('✅ Quiz generated with', response.data.quiz.length, 'questions');
+        setSelectedAnswer(null);
+        setLastResult(null);
+        setQuizHistory([]); // Clear history
+        setFinalScore(0);
+
+        console.log("✅ Quiz started with ID:", response.quizId);
       } else {
-        alert('Failed to generate quiz. This feature requires Google Gemini API configuration.');
+        alert(
+          "Failed to start quiz. This feature requires Google Gemini API configuration."
+        );
       }
     } catch (err: any) {
-      console.error('❌ Error generating quiz:', err);
-      alert('Quiz generation is not available yet. Please configure Google Gemini API in the backend.');
+      console.error("❌ Error starting quiz:", err);
+      alert(
+        "Quiz generation is not available yet. Please configure Google Gemini API in the backend."
+      );
     } finally {
       setQuizLoading(false);
     }
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestion] = answerIndex;
-    setSelectedAnswers(newAnswers);
+    setSelectedAnswer(answerIndex);
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestion < quiz.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      setShowResults(true);
-    }
-  };
+  const handleSubmitAnswer = async () => {
+    if (selectedAnswer === null || !quizId || !currentQuizQuestion?.id) return;
+    if (isSubmitting) return;
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
-    }
-  };
+    try {
+      setIsSubmitting(true);
+      const response: any = await quizAPI.submitAnswer(
+        quizId,
+        currentQuizQuestion.id,
+        selectedAnswer
+      );
 
-  const calculateScore = () => {
-    let correct = 0;
-    selectedAnswers.forEach((answer, index) => {
-      if (quiz[index] && answer === quiz[index].correctAnswer) {
-        correct++;
+      if (response?.success) {
+        // Store history for the results page
+        setQuizHistory((prev) => [
+          ...prev,
+          {
+            question: currentQuizQuestion,
+            answer: selectedAnswer,
+            result: response.result,
+          },
+        ]);
+        setLastResult(response.result); // For immediate feedback (if needed)
+
+        if (response.quizOver) {
+          console.log("✅ Quiz finished. Final Score:", response.finalScore);
+          setFinalScore(response.finalScore);
+          setShowResults(true);
+          setCurrentQuizQuestion(null);
+        } else {
+          // Load next question
+          setCurrentQuizQuestion(response.question);
+          setQuestionNumber(response.questionNumber);
+          setTotalQuestions(response.totalQuestions);
+          setSelectedAnswer(null); // Reset selection
+        }
+      } else {
+        alert("Failed to submit answer.");
       }
-    });
-    return correct;
+    } catch (err: any) {
+      console.error("❌ Error submitting answer:", err);
+      alert("An error occurred while submitting your answer.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // This function now just returns the score provided by the server
+  const calculateScore = () => {
+    return finalScore;
   };
 
   const resetQuiz = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers([]);
-    setShowResults(false);
     setShowQuiz(false);
+    setShowResults(false);
+    setQuizId(null);
+    setCurrentQuizQuestion(null);
+    setSelectedAnswer(null);
+    setLastResult(null);
+    setQuizHistory([]);
+    setFinalScore(0);
+    setQuestionNumber(0);
   };
 
-  const filteredArticles = articles.filter((article) =>
-    article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    article.article?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    article.summary?.toLowerCase().includes(searchQuery.toLowerCase())
+  // --- END UPDATED QUIZ HANDLERS ---
+
+  const filteredArticles = articles.filter(
+    (article) =>
+      article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.article?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.summary?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
@@ -199,10 +243,14 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
       <div className="w-full max-w-7xl animate-fade-in">
         <Card className="text-center py-16 border-red-500/50">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-4">Error Loading Articles</h2>
-          <p className="text-slate-400 mb-6">{error || 'Something went wrong.'}</p>
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Error Loading Articles
+          </h2>
+          <p className="text-slate-400 mb-6">
+            {error || "Something went wrong."}
+          </p>
           <button
-            onClick={() => onNavigate('learn')}
+            onClick={() => onNavigate("learn")}
             className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-all"
           >
             Back to Learn
@@ -216,7 +264,7 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
     <div className="w-full max-w-7xl animate-fade-in">
       {/* Back Button */}
       <button
-        onClick={() => onNavigate('learn')}
+        onClick={() => onNavigate("learn")}
         className="flex items-center gap-2 text-slate-400 hover:text-orange-400 transition-colors mb-6 group"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -232,7 +280,9 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
           {partData.partTitle || partData.partName}
         </h1>
         <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-          Explore {articles.length} {articles.length === 1 ? 'article' : 'articles'} in this part of the Indian Constitution
+          Explore {articles.length}{" "}
+          {articles.length === 1 ? "article" : "articles"} in this part of the
+          Indian Constitution
         </p>
       </div>
 
@@ -254,13 +304,13 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
 
       {/* Articles Grid */}
       {filteredArticles.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 auto-rows-fr">
           {filteredArticles.map((article, index) => (
-            <div key={article.id} onClick={() => handleArticleClick(article, index)}>
-              <ArticleCard
-                article={article}
-                onNavigate={onNavigate}
-              />
+            <div
+              key={article.id}
+              onClick={() => handleArticleClick(article, index)}
+            >
+              <ArticleCard article={article} onNavigate={onNavigate} />
             </div>
           ))}
         </div>
@@ -270,10 +320,12 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
             <BookOpen className="w-10 h-10 text-slate-600" />
           </div>
           <h3 className="text-xl font-bold text-slate-400 mb-2">
-            {searchQuery ? 'No articles found' : 'No articles available'}
+            {searchQuery ? "No articles found" : "No articles available"}
           </h3>
           <p className="text-slate-500">
-            {searchQuery ? 'Try adjusting your search query' : 'This part has no articles yet'}
+            {searchQuery
+              ? "Try adjusting your search query"
+              : "This part has no articles yet"}
           </p>
         </Card>
       )}
@@ -290,8 +342,11 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
                 Ready to Test Your Knowledge?
               </h2>
               <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto">
-                You've explored the articles in <span className="text-orange-400 font-semibold">{partData.partTitle}</span>. 
-                Now it's time to see how well you understood them!
+                You've explored the articles in{" "}
+                <span className="text-orange-400 font-semibold">
+                  {partData.partTitle}
+                </span>
+                . Now it's time to see how well you understood them!
               </p>
 
               {/* Learning Stats */}
@@ -302,8 +357,12 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
                       <BookOpen className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-white mb-2">{articles.length}</div>
-                  <div className="text-slate-400 text-sm">Articles to Learn</div>
+                  <div className="text-3xl font-bold text-white mb-2">
+                    {articles.length}
+                  </div>
+                  <div className="text-slate-400 text-sm">
+                    Articles to Learn
+                  </div>
                 </div>
 
                 <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
@@ -312,7 +371,7 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
                       <Brain className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-white mb-2">10</div>
+                  <div className="text-3xl font-bold text-white mb-2">5</div>
                   <div className="text-slate-400 text-sm">Quiz Questions</div>
                 </div>
 
@@ -335,8 +394,12 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
                       1
                     </div>
                     <div>
-                      <h4 className="font-bold text-white mb-1">Read Articles</h4>
-                      <p className="text-slate-400 text-sm">Study all articles in this part carefully</p>
+                      <h4 className="font-bold text-white mb-1">
+                        Read Articles
+                      </h4>
+                      <p className="text-slate-400 text-sm">
+                        Study all articles in this part carefully
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -345,7 +408,9 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
                     </div>
                     <div>
                       <h4 className="font-bold text-white mb-1">Take Quiz</h4>
-                      <p className="text-slate-400 text-sm">Answer questions to test understanding</p>
+                      <p className="text-slate-400 text-sm">
+                        Answer questions to test understanding
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -354,7 +419,9 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
                     </div>
                     <div>
                       <h4 className="font-bold text-white mb-1">Get Results</h4>
-                      <p className="text-slate-400 text-sm">See your score and learn from mistakes</p>
+                      <p className="text-slate-400 text-sm">
+                        See your score and learn from mistakes
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -364,135 +431,159 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
         </div>
       )}
 
-      {/* Quiz Section */}
+      {/* --- UPDATED QUIZ SECTION --- */}
       {articles.length > 0 && (
         <Card className="mb-8 bg-gradient-to-br from-slate-800 to-slate-900 border-orange-500/30">
           {!showQuiz ? (
+            // "Start Quiz" Button
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
                 <Brain className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-white mb-4">Test Your Knowledge</h3>
+              <h3 className="text-3xl font-bold text-white mb-4">
+                Test Your Knowledge
+              </h3>
               <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
-                Take a comprehensive quiz on all articles in {partData.partTitle}
+                Take an adaptive quiz on all articles in{" "}
+                {partData.partTitle}
               </p>
               <Button
                 size="lg"
                 onClick={handleStartQuiz}
                 disabled={quizLoading}
-                icon={quizLoading ? <Loader className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
+                icon={
+                  quizLoading ? (
+                    <Loader className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Target className="w-5 h-5" />
+                  )
+                }
               >
-                {quizLoading ? 'Generating Quiz...' : 'Start Quiz'}
+                {quizLoading ? "Generating Quiz..." : "Start Adaptive Quiz"}
               </Button>
               <p className="text-slate-500 text-sm mt-4">
-                Note: Quiz generation requires Google Gemini API configuration
+                Note: This quiz adapts to your answers. Good luck!
               </p>
             </div>
           ) : !showResults ? (
+            // Quiz In Progress View (UPDATED)
             <div className="animate-fade-in">
               {/* Quiz Progress */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-slate-400 font-semibold">
-                    Question {currentQuestion + 1} of {quiz.length}
+                    Question {questionNumber} of {totalQuestions}
                   </span>
                   <span className="text-slate-400 font-semibold">
-                    {selectedAnswers.filter(a => a !== undefined).length}/{quiz.length} Answered
+                    Score: {quizHistory.filter(h => h.result.isCorrect).length}
                   </span>
                 </div>
                 <ProgressBar
-                  value={(currentQuestion + 1) / quiz.length * 100}
+                  value={(questionNumber / totalQuestions) * 100}
                   color="primary"
                 />
               </div>
 
               {/* Question */}
-              {quiz[currentQuestion] && (
+              {currentQuizQuestion && (
                 <>
                   <div className="mb-8">
                     <h4 className="text-2xl font-bold text-white mb-6 flex items-start gap-3">
                       <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 text-sm">
-                        {currentQuestion + 1}
+                        {questionNumber}
                       </span>
-                      {quiz[currentQuestion].question}
+                      {currentQuizQuestion.question}
                     </h4>
 
-                    {/* Options */}
+                    {/* Options (UPDATED) */}
                     <div className="space-y-3">
-                      {quiz[currentQuestion].options?.map((option: string, index: number) => (
-                        <button
-                          key={index}
-                          onClick={() => handleAnswerSelect(index)}
-                          className={`w-full p-5 rounded-xl text-left transition-all border-2 ${
-                            selectedAnswers[currentQuestion] === index
-                              ? 'bg-orange-500 border-orange-400 text-white shadow-lg'
-                              : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500'
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                              selectedAnswers[currentQuestion] === index
-                                ? 'border-white bg-white text-orange-500'
-                                : 'border-slate-500'
-                            }`}>
-                              {selectedAnswers[currentQuestion] === index && (
-                                <CheckCircle className="w-5 h-5" />
-                              )}
+                      {currentQuizQuestion.options?.map(
+                        (option: string, index: number) => (
+                          <button
+                            key={index}
+                            onClick={() => handleAnswerSelect(index)}
+                            className={`w-full p-5 rounded-xl text-left transition-all border-2 ${
+                              selectedAnswer === index // Use single selectedAnswer
+                                ? "bg-orange-500 border-orange-400 text-white shadow-lg"
+                                : "bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500"
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div
+                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                  selectedAnswer === index
+                                    ? "border-white bg-white text-orange-500"
+                                    : "border-slate-500"
+                                }`}
+                              >
+                                {selectedAnswer === index && (
+                                  <CheckCircle className="w-5 h-5" />
+                                )}
+                              </div>
+                              <span className="font-medium">{option}</span>
                             </div>
-                            <span className="font-medium">{option}</span>
-                          </div>
-                        </button>
-                      ))}
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
 
-                  {/* Navigation */}
-                  <div className="flex justify-between items-center pt-6 border-t border-slate-700">
+                  {/* Navigation (UPDATED) */}
+                  <div className="flex justify-end items-center pt-6 border-t border-slate-700">
+                    {/* Previous Button is REMOVED */}
                     <Button
-                      variant="outline"
-                      onClick={handlePreviousQuestion}
-                      disabled={currentQuestion === 0}
+                      onClick={handleSubmitAnswer} // Use new handler
+                      disabled={selectedAnswer === null || isSubmitting} // Use new disabled state
+                      icon={ isSubmitting ? <Loader className="w-5 h-5 animate-spin" /> : undefined }
                     >
-                      Previous
-                    </Button>
-                    <Button
-                      onClick={handleNextQuestion}
-                      disabled={selectedAnswers[currentQuestion] === undefined}
-                    >
-                      {currentQuestion === quiz.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                      {isSubmitting
+                        ? "Submitting..."
+                        : questionNumber === totalQuestions // Check if last question
+                        ? "Finish Quiz"
+                        : "Submit Answer"}
                     </Button>
                   </div>
                 </>
               )}
             </div>
           ) : (
+            // Results View (UPDATED)
             <div className="text-center py-12 animate-fade-in">
               {/* Results */}
               <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
                 <Award className="w-12 h-12 text-white" />
               </div>
-              <h3 className="text-4xl font-bold text-white mb-4">Quiz Complete!</h3>
+              <h3 className="text-4xl font-bold text-white mb-4">
+                Quiz Complete!
+              </h3>
               <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 mb-2">
-                {calculateScore()}/{quiz.length}
+                {finalScore}/{totalQuestions}
               </div>
               <p className="text-slate-400 text-xl mb-8">
-                {calculateScore() === quiz.length
-                  ? 'Perfect score! You mastered this part! 🏆'
-                  : calculateScore() >= quiz.length * 0.7
-                  ? 'Great job! You have a good understanding! 👏'
-                  : 'Keep learning! Review the articles and try again. 📚'}
+                {finalScore === totalQuestions
+                  ? "Perfect score! You mastered this part! 🏆"
+                  : finalScore >= totalQuestions * 0.7
+                  ? "Great job! You have a good understanding! 👏"
+                  : "Keep learning! Review the articles and try again. 📚"}
               </p>
 
-              {/* Detailed Results */}
+              {/* Detailed Results (UPDATED) */}
               <div className="max-w-3xl mx-auto mb-8 text-left space-y-4">
-                {quiz.map((question: any, index: number) => {
-                  const isCorrect = selectedAnswers[index] === question.correctAnswer;
+                {quizHistory.map((historyItem: any, index: number) => {
+                  const isCorrect = historyItem.result.isCorrect;
                   return (
-                    <Card key={index} className={`${isCorrect ? 'border-green-500/50' : 'border-red-500/50'}`}>
+                    <Card
+                      key={index}
+                      className={`${
+                        isCorrect ? "border-green-500/50" : "border-red-500/50"
+                      }`}
+                    >
                       <div className="flex items-start gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isCorrect ? 'bg-green-500' : 'bg-red-500'
-                        }`}>
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            isCorrect ? "bg-green-500" : "bg-red-500"
+                          }`}
+                        >
                           {isCorrect ? (
                             <CheckCircle className="w-6 h-6 text-white" />
                           ) : (
@@ -500,17 +591,31 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
                           )}
                         </div>
                         <div className="flex-1">
-                          <h5 className="font-bold text-white mb-2">{question.question}</h5>
-                          <p className={`text-sm mb-2 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                            Your answer: {question.options?.[selectedAnswers[index]]}
+                          <h5 className="font-bold text-white mb-2">
+                            {historyItem.question.question}
+                          </h5>
+                          <p
+                            className={`text-sm mb-2 ${
+                              isCorrect ? "text-green-400" : "text-red-400"
+                            }`}
+                          >
+                            Your answer:{" "}
+                            {historyItem.question.options?.[historyItem.answer]}
                           </p>
                           {!isCorrect && (
                             <p className="text-sm text-green-400 mb-2">
-                              Correct answer: {question.options?.[question.correctAnswer]}
+                              Correct answer:{" "}
+                              {
+                                historyItem.question.options?.[
+                                  historyItem.result.correctAnswer
+                                ]
+                              }
                             </p>
                           )}
-                          {question.explanation && (
-                            <p className="text-slate-400 text-sm">{question.explanation}</p>
+                          {historyItem.result.explanation && (
+                            <p className="text-slate-400 text-sm">
+                              {historyItem.result.explanation}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -523,13 +628,13 @@ export const PartArticlesPage: React.FC<PartArticlesPageProps> = ({ onNavigate, 
               <div className="flex gap-4 justify-center">
                 <Button
                   variant="outline"
-                  onClick={resetQuiz}
+                  onClick={resetQuiz} // This is correct, it resets to the "Start Quiz" screen
                   icon={<RotateCcw className="w-5 h-5" />}
                 >
                   Retake Quiz
                 </Button>
                 <Button
-                  onClick={() => onNavigate('learn')}
+                  onClick={() => onNavigate("learn")}
                   icon={<BookOpen className="w-5 h-5" />}
                 >
                   Learn More Parts

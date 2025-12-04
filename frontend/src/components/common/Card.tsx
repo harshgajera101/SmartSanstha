@@ -3,6 +3,7 @@ import React from 'react';
 interface CardProps {
   children: React.ReactNode;
   className?: string;
+  
   hover?: boolean;
   onClick?: () => void;
 }
