@@ -54,7 +54,7 @@ function App() {
 
   const handleLoginSuccess = (userData: UserData) => {
     setUser(userData);
-    setCurrentPage('dashboard');
+    setCurrentPage('home');
   };
 
   const handleLogout = async () => {
