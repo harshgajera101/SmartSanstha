@@ -3,23 +3,34 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Admin from '../models/Admin.js';
+import getCategoryFromDOB from '../utils/categorize.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
 const createAccessToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES || '15m' });
+  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRES || '15m',
+  });
 };
 
 const createRefreshToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES || '7d' });
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRES || '7d',
+  });
 };
+
+// ✅ Treat Render as production too
+const isProduction =
+  process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
 const cookieOptions = {
   httpOnly: true,
-  // secure: true, // enable in production with https
-  sameSite: 'lax',
-  // domain: process.env.COOKIE_DOMAIN || 'localhost',
+  secure: isProduction,                    // true on Render (HTTPS), false locally
+  sameSite: isProduction ? 'none' : 'lax', // NONE for cross-site cookies from frontend → backend
+  path: '/',                               // send to all routes
+  // domain: process.env.COOKIE_DOMAIN,    // optional; fine to omit on Render
 };
+
 
 export const registerUser = async (req, res) => {
   try {
@@ -120,8 +131,8 @@ export const loginAdmin = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
+  res.clearCookie('accessToken', { ...cookieOptions });
+  res.clearCookie('refreshToken', { ...cookieOptions });
   return res.json({ message: 'Logged out' });
 };
 
@@ -169,6 +180,69 @@ export const createAdmin = async (req, res) => {
       message: 'Admin created',
       admin: { id: admin._id, name: admin.name, email: admin.email },
     });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+export const getProfile = async (req, res) => {
+  try {
+    // req.user is set by verifyAccessToken middleware
+    if (!req.user) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+    
+    // Return user profile with proper structure
+    return res.json({ 
+      profile: {
+        id: req.user._id. toString(),
+        name: req. user.name,
+        email: req.user.email,
+        category: req.user.category
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const updates = {};
+    const { name, dob, password } = req.body;
+
+    if (name) updates.name = name;
+    if (dob) {
+      updates.dob = dob;
+      updates.category = getCategoryFromDOB(dob);
+    }
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(password, salt);
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+    }).select('-password');
+
+    return res.json({ message: 'Profile updated', user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    await User.findByIdAndDelete(userId);
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    return res.json({ message: 'Account deleted' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });

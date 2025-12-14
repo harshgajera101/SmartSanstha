@@ -29,15 +29,34 @@ const PORT = process.env.PORT || 5001;
 // MIDDLEWARE
 // =================================================================
 console.log('⚙️  Setting up middleware...');
+
+const allowedOrigins = [
+  'http://localhost:5173',                   // local Vite
+  'https://smartsanstha-7zax.onrender.com', // your deployed frontend
+];
+
 app.use(
   cors({
-    origin: ['http://localhost:5173'], // change to your Vite dev URL or production host
-    credentials: true,
+    origin(origin, callback) {
+      // allow tools/no origin (like curl, Postman)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log('❌ CORS blocked for origin:', origin);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true, // 🔴 REQUIRED for cookies
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 console.log('✅ Middleware configured');
+
+
 
 // =================================================================
 // ROUTES

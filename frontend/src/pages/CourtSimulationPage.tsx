@@ -37,6 +37,8 @@ interface CourtSimulationPageProps {
   onNavigate: (page: string) => void;
 }
 
+const API_BASE_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
 export const CourtSimulationPage: React.FC<CourtSimulationPageProps> = ({
   onNavigate,
 }) => {
@@ -62,7 +64,9 @@ export const CourtSimulationPage: React.FC<CourtSimulationPageProps> = ({
   const fetchScenarios = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5001/api/court/scenarios");
+      const response = await fetch(`${API_BASE_URL}/court/scenarios`,{
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error("Failed to fetch scenarios");
       const data = await response.json();
       setScenarios(data.success ? data.data : []);

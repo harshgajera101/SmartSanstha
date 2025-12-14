@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { User, Mail, KeyRound, Calendar, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 
-// Define a type for the user data we expect from the backend
 interface UserData {
   id: string;
   name: string;
@@ -9,38 +8,42 @@ interface UserData {
   category: string;
 }
 
-// Props now include a callback function to notify the parent component of a successful login
 interface AuthPageProps {
   onLoginSuccess: (userData: UserData) => void;
 }
 
-// --- Styled Components (Replicated from your project's style - NO CHANGES) ---
-// ... (Card, Button, InputField components remain unchanged) ...
+// --- Styled Components ---
+
 interface CardProps {
   children: React.ReactNode;
   className?: string;
 }
+// CHANGE 1: Reduced padding from p-8 to p-6 to make the card smaller
 const Card: React.FC<CardProps> = ({ children, className = '' }) => (
-  <div className={`bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-xl p-8 ${className}`}>
+  <div className={`bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-xl p-6 ${className}`}>
     {children}
   </div>
 );
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   icon?: React.ReactNode;
 }
+// CHANGE 2: Slightly reduced padding in button (py-2.5 instead of py-3) for a compact look
 const Button: React.FC<ButtonProps> = ({ children, icon, ...props }) => (
   <button
     {...props}
-    className="flex items-center justify-center gap-3 w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+    className="flex items-center justify-center gap-3 w-full px-6 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
   >
     {icon}
     {children}
   </button>
 );
+
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon: React.ReactNode;
 }
+// CHANGE 3: Slightly reduced vertical padding in inputs (py-2.5 instead of py-3)
 const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({ icon, ...props }, ref) => (
   <div className="relative">
     <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400">
@@ -49,11 +52,12 @@ const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({ icon, 
     <input
       ref={ref}
       {...props}
-      className="w-full bg-slate-700 border border-slate-600 rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+      className="w-full bg-slate-700 border border-slate-600 rounded-xl pl-12 pr-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all [color-scheme:dark]"
     />
   </div>
 ));
-// --- Main Authentication Page Component ---
+
+// --- Main Component ---
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -69,8 +73,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Get the API base URL from the environment variable
   const API_URL = import.meta.env.VITE_AUTH_API_BASE_URL;
+
+  const today = new Date();
+  const maxDateObj = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
+  const maxDate = maxDateObj.toISOString().split('T')[0];
 
   const toggleView = () => {
     setIsLoginView(!isLoginView);
@@ -89,6 +96,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       setError("Passwords do not match.");
       return;
     }
+
+    const birthDate = new Date(dob);
+    const currentDate = new Date();
+    let age = currentDate.getFullYear() - birthDate.getFullYear();
+    const m = currentDate.getMonth() - birthDate.getMonth();
+    
+    if (m < 0 || (m === 0 && currentDate.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    if (age < 12) {
+      setError("You must be at least 12 years old to create an account.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setSuccess(null);
@@ -98,15 +120,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, dob, email, password, confirmPassword }),
+        credentials: 'include',
       });
       const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to register.');
-      }
+      if (!response.ok) throw new Error(data.message || 'Failed to register.');
       
       setSuccess("Registration successful! Please sign in.");
-      setIsLoginView(true); // Switch to login view
+      setIsLoginView(true);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -125,16 +146,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-        // IMPORTANT: This allows cookies to be sent and received
         credentials: 'include',
       });
       const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to login.');
-      }
+      if (!response.ok) throw new Error(data.message || 'Failed to login.');
       
-      // On success, call the function passed from App.tsx
       onLoginSuccess(data.user);
     } catch (err: any) {
       setError(err.message);
@@ -154,20 +171,25 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   );
 
   return (
-    <div className="w-full max-w-md animate-fade-in">
+    // CHANGE 4: Added 'my-8' to give space from top and bottom. 
+    // Kept max-w-md, but you can change to max-w-sm if you want the card narrower width-wise too.
+    <div className="w-full max-w-md animate-fade-in my-8">
       <Card>
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-xl mb-6">
-            {isLoginView ? <LogIn className="w-10 h-10 text-white" /> : <UserPlus className="w-10 h-10 text-white" />}
+        <div className="text-center mb-6">
+          {/* CHANGE 5: Reduced icon size from w-20 h-20 to w-16 h-16 */}
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-xl mb-4">
+            {isLoginView ? <LogIn className="w-8 h-8 text-white" /> : <UserPlus className="w-8 h-8 text-white" />}
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {isLoginView ? 'Welcome Back!' : 'Create Your Account'}
+          <h1 className="text-2xl font-bold text-white mb-1">
+            {isLoginView ? 'Welcome Back!' : 'Create Account'}
           </h1>
-          <p className="text-slate-400">
-            {isLoginView ? 'Sign in to continue your journey.' : 'Join us to start learning about the constitution.'}
+          <p className="text-sm text-slate-400">
+            {isLoginView ? 'Sign in to continue.' : 'Join to start learning.'}
           </p>
         </div>
-        <form onSubmit={isLoginView ? handleLogin : handleRegister} className="space-y-6">
+
+        {/* CHANGE 6: Reduced space-y-6 to space-y-4 to make form shorter */}
+        <form onSubmit={isLoginView ? handleLogin : handleRegister} className="space-y-4">
           {!isLoginView && (
             <>
               <InputField
@@ -178,14 +200,22 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
-              <InputField
-                icon={<Calendar className="w-5 h-5" />}
-                type="date"
-                required
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-              />
+              
+              <div className="relative">
+                <InputField
+                  icon={<Calendar className="w-5 h-5" />}
+                  type="date"
+                  required
+                  value={dob}
+                  max={maxDate}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-xl pl-12 pr-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all [color-scheme:dark]"
+                />
+                <p className="text-[10px] text-slate-500 mt-1 ml-1">
+                   Must be 12+ years old.
+                </p>
+              </div>
+
             </>
           )}
           <InputField
@@ -220,16 +250,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                <PasswordToggle />
             </div>
           )}
-          {error && <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-lg text-center">{error}</p>}
-          {success && <p className="text-sm text-green-400 bg-green-500/10 p-3 rounded-lg text-center">{success}</p>}
+          {error && <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded-lg text-center">{error}</p>}
+          {success && <p className="text-xs text-green-400 bg-green-500/10 p-2 rounded-lg text-center">{success}</p>}
 
           <Button type="submit" disabled={isLoading} icon={isLoginView ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}>
             {isLoading ? 'Processing...' : (isLoginView ? 'Sign In' : 'Sign Up')}
           </Button>
         </form>
-        <div className="text-center mt-6">
+        <div className="text-center mt-4">
           <button onClick={toggleView} className="text-sm text-slate-400 hover:text-white">
-            {isLoginView ? "Don't have an account?" : "Already have an account?"}
+            {isLoginView ? "No account?" : "Have an account?"}
             <span className="font-semibold text-orange-400 hover:text-orange-300 ml-1">
               {isLoginView ? 'Sign Up' : 'Sign In'}
             </span>

@@ -6,7 +6,6 @@ import { ContactPage } from './pages/ContactPage';
 import { ArticlePage } from './pages/ArticlePage';
 import { PartArticlesPage } from './pages/PartArticlesPage';
 import { LearnPage } from './components/learn/LearnPage';
-// import { ExploreGames } from './components/games/ExploreGames';
 import { MemoryGame } from './components/games/MemoryGame/MemoryGame';
 import { RightsDutiesGame } from './components/games/RightsDutiesGame/RightsDutiesGame';
 import CivicCityBuilder from './components/games/CivicCityBuilder/CivicCityBuilder';
@@ -21,7 +20,7 @@ export interface UserData {
   id: string;
   name: string;
   email: string;
-  category: string;
+  category:  string;
 }
 
 function App() {
@@ -30,18 +29,38 @@ function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_AUTH_API_BASE_URL;
+  const API_URL = import.meta. env.VITE_AUTH_API_BASE_URL;
 
   // Check user session on app load
   useEffect(() => {
     const checkUserSession = async () => {
       try {
+        // Try to get user profile
         const response = await fetch(`${API_URL}/api/user/me`, {
           credentials: 'include',
         });
+        
         if (response.ok) {
-          const data = await response.json();
+          const data = await response. json();
           setUser(data.profile);
+        } else if (response.status === 401) {
+          // Access token expired, try to refresh
+          const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+          
+          if (refreshResponse.ok) {
+            // Retry getting user profile with new access token
+            const retryResponse = await fetch(`${API_URL}/api/user/me`, {
+              credentials: 'include',
+            });
+            
+            if (retryResponse.ok) {
+              const data = await retryResponse.json();
+              setUser(data.profile);
+            }
+          }
         }
       } catch (error) {
         console.error('Session check failed:', error);
@@ -54,7 +73,7 @@ function App() {
 
   const handleLoginSuccess = (userData: UserData) => {
     setUser(userData);
-    setCurrentPage('dashboard');
+    setCurrentPage('home');
   };
 
   const handleLogout = async () => {
@@ -81,7 +100,7 @@ function App() {
     switch (currentPage) {
       case 'home':
         return <HomePage onNavigate={handleNavigation} />;
-      case 'about':
+      case 'about': 
         return <AboutPage />;
       case 'learn':
         return <LearnPage onNavigate={handleNavigation} user={user} />;
@@ -89,7 +108,7 @@ function App() {
         return <PartArticlesPage onNavigate={handleNavigation} partData={pageData} />;
       case 'article':
         return <ArticlePage onNavigate={handleNavigation} articleData={pageData} />;
-      case 'games':
+      case 'games': 
         return <GamesPage onNavigate={handleNavigation} />;
       case 'memory-game':
         return <MemoryGame onNavigate={handleNavigation} />;
@@ -99,8 +118,8 @@ function App() {
         return <CivicCityBuilder onNavigate={handleNavigation} />;
       case 'jigsaw-puzzle':
         return <JigsawPuzzle onNavigate={handleNavigation} />;
-      case 'dashboard':
-        return user ? <Dashboard user={user} /> : <HomePage onNavigate={handleNavigation} />;
+      case 'dashboard': 
+        return user ?  <Dashboard user={user} /> : <HomePage onNavigate={handleNavigation} />;
       case 'contact':
         return <ContactPage />;
       case 'auth':
@@ -120,13 +139,10 @@ function App() {
     );
   }
 
-  // --- MODIFIED SECTION ---
   // Conditionally render AuthPage without the Layout
   if (currentPage === 'auth') {
     return (
-      // Render AuthPage in a minimal wrapper to center it, matching your app's background
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Background Pattern (copied from Layout) to make it consistent */}
         <div className="fixed inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-10 left-10 w-32 h-32 bg-orange-500 rounded-full blur-3xl animate-pulse"></div>
           <div
@@ -142,7 +158,6 @@ function App() {
             style={{ animationDelay: '3s' }}
           ></div>
         </div>
-        {/* Render only the AuthPage component */}
         <div className="relative z-10">
           <AuthPage onLoginSuccess={handleLoginSuccess} />
         </div>
@@ -164,8 +179,6 @@ function App() {
       <ChatbotFloating user={user} />
     </>
   );
-  // --- END OF MODIFIED SECTION ---
 }
 
 export default App;
-
