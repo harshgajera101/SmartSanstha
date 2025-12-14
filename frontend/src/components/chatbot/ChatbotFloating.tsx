@@ -291,7 +291,7 @@ import remarkGfm from 'remark-gfm';
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X, Send, User, Loader2, ArrowUpLeft } from 'lucide-react';
 import { UserData } from '@/App';
-import logo from '../../assets/react.svg';
+import logo from '../../assets/bot_LOGO.png';
 
 interface Message {
   id: string;
