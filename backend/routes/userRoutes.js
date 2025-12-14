@@ -6,10 +6,12 @@ import { allowRoles } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-// All routes below require a valid access token from a user
+// GET /me should only require valid token, not role check
+router.get('/me', verifyAccessToken, userController.getProfile);
+
+// All other routes require both token AND user role
 router.use(verifyAccessToken, allowRoles('user'));
 
-router.get('/me', userController.getProfile);
 router.put('/me', userController.updateProfile);
 router.delete('/me', userController.deleteAccount);
 
