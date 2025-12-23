@@ -19,5 +19,8 @@
   "homepage": "https://github.com/harshgajera101/SmartSanstha#readme",
   "dependencies": {
     "concurrently": "^9.2.1"
+  },
+  "devDependencies": {
+    "baseline-browser-mapping": "^2.9.11"
   }
 }
