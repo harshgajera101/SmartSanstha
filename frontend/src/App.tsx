@@ -6,6 +6,7 @@ import { ContactPage } from "./pages/ContactPage";
 import { ArticlePage } from "./pages/ArticlePage";
 import { PartArticlesPage } from "./pages/PartArticlesPage";
 import { LearnPage } from "./components/learn/LearnPage";
+// import { ExploreGames } from './components/games/ExploreGames';
 import { MemoryGame } from "./components/games/MemoryGame/MemoryGame";
 import { RightsDutiesGame } from "./components/games/RightsDutiesGame/RightsDutiesGame";
 import CivicCityBuilder from "./components/games/CivicCityBuilder/CivicCityBuilder";
@@ -29,56 +30,37 @@ function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_URL = import.meta.env.REACT_AUTH_API_BASE_URL || "http://localhost:5001";
+  const API_URL = import.meta.env.VITE_AUTH_API_BASE_URL;
 
   // Check user session on app load
-  // useEffect(() => {
-  //   const checkUserSession = async () => {
-  //     try {
-  //       // Try to get user profile
-  //       const response = await fetch(`${API_URL}/api/user/me`, {
-  //         credentials: 'include',
-  //       });
-
-  //       if (response.ok) {
-  //         const data = await response. json();
-  //         setUser(data.profile);
-  //       } else if (response.status === 401) {
-  //         // Access token expired, try to refresh
-  //         const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
-  //           method: 'POST',
-  //           credentials: 'include',
-  //         });
-
-  //         if (refreshResponse.ok) {
-  //           // Retry getting user profile with new access token
-  //           const retryResponse = await fetch(`${API_URL}/api/user/me`, {
-  //             credentials: 'include',
-  //           });
-
-  //           if (retryResponse.ok) {
-  //             const data = await retryResponse.json();
-  //             setUser(data.profile);
-  //           }
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error('Session check failed:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //   checkUserSession();
-  // }, [API_URL]);
+  //  useEffect(() => {
+  //    const checkUserSession = async () => {
+  //      try {
+  //        const response = await fetch(`${API_URL}/api/user/me`, {
+  //          credentials: 'include',
+  //        });
+  //        if (response.ok) {
+  //          const data = await response.json();
+  //          setUser(data.profile);
+  //        }
+  //      } catch (error) {
+  //        console.error('Session check failed:', error);
+  //      } finally {
+  //        setIsLoading(false);
+  //      }
+  //    };
+  //    checkUserSession();
+  //  }, [API_URL]);
 
   // Check user session on app load
+  
   useEffect(() => {
     const checkUserSession = async () => {
-      // Add timeout to prevent long loading
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 5 second timeout
-
       try {
+        // Add timeout to prevent long loading
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
         // Try to get user profile
         const response = await fetch(`${API_URL}/api/user/me`, {
           credentials: "include",
@@ -91,7 +73,10 @@ function App() {
           const data = await response.json();
           setUser(data.profile);
         } else if (response.status === 401) {
-          // Access token expired, try to refresh
+          // No token or expired token - user is not logged in, that's okay
+          console.log("User not logged in");
+
+          // Try to refresh token
           try {
             const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
               method: "POST",
@@ -111,15 +96,17 @@ function App() {
               }
             }
           } catch (refreshError) {
-            console.log("Token refresh failed or timed out");
+            // Refresh failed, user stays logged out
+            console.log("Token refresh failed, user not authenticated");
           }
         }
       } catch (error: any) {
         if (error.name === "AbortError") {
-          console.log("Session check timed out - continuing without login");
+          console.log("Session check timed out");
         } else {
           console.error("Session check failed:", error);
         }
+        // Don't block the app if session check fails
       } finally {
         setIsLoading(false);
       }
@@ -203,10 +190,13 @@ function App() {
     );
   }
 
+  // --- MODIFIED SECTION ---
   // Conditionally render AuthPage without the Layout
   if (currentPage === "auth") {
     return (
+      // Render AuthPage in a minimal wrapper to center it, matching your app's background
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Background Pattern (copied from Layout) to make it consistent */}
         <div className="fixed inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-10 left-10 w-32 h-32 bg-orange-500 rounded-full blur-3xl animate-pulse"></div>
           <div
@@ -222,6 +212,7 @@ function App() {
             style={{ animationDelay: "3s" }}
           ></div>
         </div>
+        {/* Render only the AuthPage component */}
         <div className="relative z-10">
           <AuthPage onLoginSuccess={handleLoginSuccess} />
         </div>
@@ -243,6 +234,7 @@ function App() {
       <ChatbotFloating user={user} />
     </>
   );
+  // --- END OF MODIFIED SECTION ---
 }
 
 export default App;
