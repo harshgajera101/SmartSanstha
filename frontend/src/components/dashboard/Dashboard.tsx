@@ -15,6 +15,7 @@ import { ProgressBar } from "../common/ProgressBar";
 import { UserProgress } from "./UserProgress";
 import { ScoreCard } from "./ScoreCard";
 import { Bookmarks } from "./Bookmarks";
+import { RecentReading } from "./RecentReading";
 import { progressAPI } from "../../services/api";
 import type { UserData } from "../../App";
 
@@ -118,11 +119,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
         const prev = prevRaw
           ? JSON.parse(prevRaw)
           : {
-              totalScore: newState.totalScore,
-              gamesPlayed: newState.gamesPlayed,
-              currentStreak: newState.currentStreak,
-              articlesRead: newState.articlesRead,
-            };
+            totalScore: newState.totalScore,
+            gamesPlayed: newState.gamesPlayed,
+            currentStreak: newState.currentStreak,
+            articlesRead: newState.articlesRead,
+          };
 
         const formatTrend = (diff: number) => (diff >= 0 ? `+${diff}` : `${diff}`);
 
@@ -300,41 +301,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
         <div className="space-y-8">
           <Bookmarks bookmarks={data.bookmarks} onNavigate={onNavigate} />
 
-          <Card>
-            <div className="flex items-center gap-3 mb-6">
-              <Calendar className="w-6 h-6 text-orange-400" />
-              <h2 className="text-xl font-bold text-white">Recent Reading</h2>
-            </div>
+          <RecentReading
+            activities={recentActivity}
+            onNavigate={onNavigate}
+          />
 
-            <div className="space-y-3">
-              {recentActivity.length === 0 ? (
-                <p className="text-slate-500 text-sm py-4">No recent activity found.</p>
-              ) : (
-                recentActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    onClick={() =>
-                      activity.articleNumber &&
-                      onNavigate("learn", {
-                        fromDashboard: true,
-                        targetPartName: activity.partName,
-                        targetArticleNumber: activity.articleNumber,
-                      })
-                    }
-                    className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl hover:bg-slate-800 transition-all cursor-pointer group"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                      📖
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-semibold text-sm truncate">{activity.title}</h4>
-                      <p className="text-xs text-slate-500">{activity.date}</p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
         </div>
       </div>
 
