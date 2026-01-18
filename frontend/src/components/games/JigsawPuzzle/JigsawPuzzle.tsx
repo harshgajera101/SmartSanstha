@@ -1,7 +1,8 @@
 // frontend/src/components/games/JigsawPuzzle/JigsawPuzzle.tsx
 
-import React, { useState, useEffect, CSSProperties } from 'react';
+import React, { useState, useEffect, useRef, CSSProperties } from 'react';
 import { ProgressBar } from '../../common/ProgressBar';
+import { userStatsAPI } from "../../../services/api"; // ✅ ADDED
 
 // --- TYPES ---
 interface JigsawPuzzleProps {
@@ -150,10 +151,51 @@ const JigsawPuzzle: React.FC<JigsawPuzzleProps> = ({ onNavigate }) => {
   const [draggedOverZone, setDraggedOverZone] = useState<number | null>(null);
   const [wobblePieceId, setWobblePieceId] = useState<string | null>(null);
 
+  // ✅ TRACKING (SESSION + TIME) ADDED
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const startTimeRef = useRef<number>(Date.now());
+  const trackedRef = useRef<boolean>(false);
+
+  const resetTrackingSession = () => {
+    sessionIdRef.current = crypto.randomUUID();
+    startTimeRef.current = Date.now();
+    trackedRef.current = false;
+  };
+
   useEffect(() => {
     loadPuzzle(currentPuzzle.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPuzzle.id]);
+
+  // ✅ TRACK ONLY WHEN COMPLETED (ONLY ONCE)
+  useEffect(() => {
+    const trackEnd = async () => {
+      if (!isCompleted) return;
+      if (trackedRef.current) return;
+
+      trackedRef.current = true;
+
+      const timeTaken = Math.floor((Date.now() - startTimeRef.current) / 1000);
+
+      try {
+        await userStatsAPI.trackGameEnd({
+          sessionId: sessionIdRef.current,
+          gameId: "jigsaw_puzzle",
+          gameName: "Jigsaw Puzzle",
+          timeTaken,
+          isWin: true,
+          meta: {
+            puzzleId: currentPuzzle.id,
+            puzzleName: currentPuzzle.name,
+          },
+        });
+      } catch (error) {
+        console.error("❌ trackGameEnd failed:", error);
+      }
+    };
+
+    trackEnd();
+  }, [isCompleted]); // ✅ ONLY depends on isCompleted
 
   const loadPuzzle = (puzzleId: string) => {
     const puzzleData = puzzles.find(p => p.id === puzzleId)!;
@@ -167,6 +209,9 @@ const JigsawPuzzle: React.FC<JigsawPuzzleProps> = ({ onNavigate }) => {
     setPiecesInTray(newPieces.sort(() => Math.random() - 0.5));
     setBoardState(Array(totalPieces).fill(null));
     setIsCompleted(false);
+
+    // ✅ RESET TRACKING ON NEW GAME / PLAY AGAIN
+    resetTrackingSession();
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLImageElement>, pieceId: string) => {
@@ -222,7 +267,7 @@ const JigsawPuzzle: React.FC<JigsawPuzzleProps> = ({ onNavigate }) => {
   return (
     <div style={styles.gameContainer}>
       <KeyframesStyle />
-      
+
       {/* Back Button */}
       <div style={styles.backButtonContainer}>
         <button
@@ -342,8 +387,8 @@ const JigsawPuzzle: React.FC<JigsawPuzzleProps> = ({ onNavigate }) => {
               <button onClick={() => loadPuzzle(currentPuzzle.id)} style={styles.playAgainBtn}>
                 Play Again
               </button>
-              <button 
-                onClick={() => onNavigate('games')} 
+              <button
+                onClick={() => onNavigate('games')}
                 style={{
                   ...styles.playAgainBtn,
                   background: '#374151',

@@ -16,6 +16,7 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import progressRoutes from "./routes/progressRoutes.js";
 import { verifyAccessToken } from "./middleware/authMiddleware.js";
+import userStatsRoutes from "./routes/userStatsRoutes.js";
 
 
 
@@ -133,6 +134,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use("/api/progress", progressRoutes);
+app.use("/api/user-stats", userStatsRoutes);
+
 
 // 404 handler
 app.use((req, res) => {

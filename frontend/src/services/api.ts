@@ -48,6 +48,24 @@ api.interceptors.response.use(
 );
 
 // =================================================================
+// 🎮 User Stats APIs
+// =================================================================
+// ✅ User Stats API
+export const userStatsAPI = {
+  trackGameEnd: (payload: {
+    sessionId: string;
+    gameId: string;
+    gameName: string;
+    score?: number;
+    timeTaken?: number;
+    isWin?: boolean;
+    meta?: any;
+  }) => api.post("/user-stats/track-game", payload),
+};
+
+
+
+// =================================================================
 // 📚 Article APIs
 // =================================================================
 export const articleAPI = {

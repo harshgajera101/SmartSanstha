@@ -4,10 +4,8 @@ import UserArticleProgress from "../models/UserArticleProgress.js";
 import UserStats from "../models/UserStats.js";
 
 const PART_TOTALS = {
-  // special
   Preamble: 1,
 
-  // core Parts
   "Part I": 4,
   "Part II": 7,
   "Part III": 30,
@@ -42,13 +40,36 @@ const PART_TOTALS = {
 
 async function getOrCreateStats(userId) {
   let stats = await UserStats.findOne({ user: userId });
-  if (!stats) stats = await UserStats.create({ user: userId });
+
+  // ✅ create with proper defaults (VERY IMPORTANT)
+  if (!stats) {
+    stats = await UserStats.create({
+      user: userId,
+      totalScore: 0,
+      articleScore: 0,
+      gameScore: 0,
+      articlesRead: 0,
+      gamesPlayed: 0,
+      quizzesTaken: 0,
+      currentStreak: 0,
+      playedSessions: [],
+    });
+  }
+
+  // ✅ ensure always number
+  stats.totalScore = Number(stats.totalScore || 0);
+  stats.articleScore = Number(stats.articleScore || 0);
+  stats.gameScore = Number(stats.gameScore || 0);
+  stats.articlesRead = Number(stats.articlesRead || 0);
+  stats.gamesPlayed = Number(stats.gamesPlayed || 0);
+
   return stats;
 }
 
 const cleanArticleNumber = (raw) => {
   const str = String(raw).trim();
   if (str.toLowerCase().includes("preamble")) return "0";
+
   const match = str.match(/(\d+[A-Za-z]*)/);
   return match ? match[1] : str;
 };
@@ -62,30 +83,53 @@ export const markArticleRead = async (req, res) => {
       return res.status(400).json({ message: "articleNumber is required" });
     }
 
-    // normalize before saving
     articleNumber = cleanArticleNumber(articleNumber);
 
-    const progress = await UserArticleProgress.findOneAndUpdate(
+    // ✅ check article already completed or not
+    const existing = await UserArticleProgress.findOne({
+      user: userId,
+      articleNumber,
+    });
+
+    const wasAlreadyCompleted = existing?.status === "completed";
+
+    // ✅ mark as completed
+    await UserArticleProgress.findOneAndUpdate(
       { user: userId, articleNumber },
       {
-        $set: { partName, status: "completed", lastReadAt: new Date() },
+        $set: {
+          partName,
+          status: "completed",
+          lastReadAt: new Date(),
+        },
       },
       { upsert: true, new: true }
     );
 
-    // update stats
+    // ✅ update stats safely
     const stats = await getOrCreateStats(userId);
+
+    // ✅ count completed for UI
     const completedCount = await UserArticleProgress.countDocuments({
       user: userId,
       status: "completed",
     });
     stats.articlesRead = completedCount;
+
+    // ✅ add points ONLY if this is first time completing this article
+    if (!wasAlreadyCompleted) {
+      stats.articleScore += 10;
+    }
+
+    // ✅ totalScore ALWAYS = articleScore + gameScore
+    stats.totalScore = stats.articleScore + stats.gameScore;
+
     stats.lastActive = new Date();
     await stats.save();
 
-    return res.json({ success: true, progress, stats });
+    return res.json({ success: true, stats });
   } catch (err) {
-    console.error(err);
+    console.error("markArticleRead error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -119,7 +163,7 @@ export const toggleBookmark = async (req, res) => {
 
     return res.json({ success: true, bookmarked: progress.bookmarked });
   } catch (err) {
-    console.error(err);
+    console.error("toggleBookmark error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -145,7 +189,7 @@ export const getDashboardData = async (req, res) => {
       .sort({ updatedAt: -1 })
       .lean();
 
-    // per‑part progress
+    // per-part progress
     const perPartRaw = await UserArticleProgress.aggregate([
       {
         $match: {
@@ -177,7 +221,7 @@ export const getDashboardData = async (req, res) => {
       perPart,
     });
   } catch (err) {
-    console.error(err);
+    console.error("getDashboardData error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };

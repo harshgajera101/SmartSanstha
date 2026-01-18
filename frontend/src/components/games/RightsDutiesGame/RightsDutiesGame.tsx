@@ -1,26 +1,28 @@
 // frontend/src/components/games/RightsDutiesGame/RightsDutiesGame.tsx
 
-import React, { useState } from 'react';
-import { Scale, Info, ArrowLeft } from 'lucide-react';
-import { SCENARIOS } from '../../../data/gamesData';
-import { IToken, IRandomEvent } from '../../../types';
-import { BalanceMeter } from './BalanceMeter';
-import { ScenarioDisplay } from './ScenarioDisplay';
-import { TokenTray } from './TokenTray';
-import { DropScale } from './DropScale';
-import { Modal } from '../../common/Modal';
-import { Button } from '../../common/Button';
-import { Card } from '../../common/Card';
+import React, { useEffect, useRef, useState } from "react";
+import { Scale, Info, ArrowLeft } from "lucide-react";
+import { SCENARIOS } from "../../../data/gamesData";
+import { IToken, IRandomEvent } from "../../../types";
+import { BalanceMeter } from "./BalanceMeter";
+import { ScenarioDisplay } from "./ScenarioDisplay";
+import { TokenTray } from "./TokenTray";
+import { DropScale } from "./DropScale";
+import { Modal } from "../../common/Modal";
+import { Button } from "../../common/Button";
+import { Card } from "../../common/Card";
+import { userStatsAPI } from "../../../services/api";
 
 interface RightsDutiesGameProps {
   onNavigate: (page: string) => void;
 }
 
 export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }) => {
-  const [gameState, setGameState] = useState<'playing' | 'debrief' | 'end'>('playing');
+  const [gameState, setGameState] = useState<"playing" | "debrief" | "end">("playing");
   const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
   const [freedom, setFreedom] = useState(50);
   const [order, setOrder] = useState(50);
+
   const [debriefResult, setDebriefResult] = useState<{
     token: IToken;
     randomEvent?: IRandomEvent;
@@ -29,6 +31,17 @@ export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }
   } | null>(null);
 
   const currentScenario = SCENARIOS[currentScenarioIndex];
+
+  // ✅ tracking session per full game play
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const startTimeRef = useRef<number>(Date.now());
+  const trackedRef = useRef(false);
+
+  const resetTrackingSession = () => {
+    sessionIdRef.current = crypto.randomUUID();
+    startTimeRef.current = Date.now();
+    trackedRef.current = false;
+  };
 
   const handleTokenDrop = (token: IToken) => {
     let finalFreedom = freedom + token.meter.freedom;
@@ -51,17 +64,18 @@ export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }
 
     setFreedom(finalFreedom);
     setOrder(finalOrder);
+
     setDebriefResult({ token, randomEvent: triggeredEvent, finalFreedom, finalOrder });
-    setGameState('debrief');
+    setGameState("debrief");
   };
 
   const handleNextScenario = () => {
     if (currentScenarioIndex < SCENARIOS.length - 1) {
       setCurrentScenarioIndex((prev) => prev + 1);
       setDebriefResult(null);
-      setGameState('playing');
+      setGameState("playing");
     } else {
-      setGameState('end');
+      setGameState("end");
     }
   };
 
@@ -70,38 +84,61 @@ export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }
     setOrder(50);
     setCurrentScenarioIndex(0);
     setDebriefResult(null);
-    setGameState('playing');
+    setGameState("playing");
+
+    // ✅ new play session
+    resetTrackingSession();
   };
 
   const getFinalMessage = () => {
-    if (freedom > 70 && order < 30) return {
-      title: 'Chaos Reigns!',
-      message: 'Too much freedom without order led to instability.',
-      emoji: '⚠️'
-    };
-    if (order > 70 && freedom < 30) return {
-      title: 'Authoritarian State!',
-      message: 'Too much order suppressed fundamental freedoms.',
-      emoji: '🔒'
-    };
-    if (Math.abs(freedom - order) < 15) return {
-      title: 'Perfect Balance!',
-      message: 'You maintained an excellent equilibrium between rights and duties.',
-      emoji: '⚖️'
-    };
-    return {
-      title: 'Good Effort!',
-      message: 'You navigated the scenarios with reasonable balance.',
-      emoji: '👏'
-    };
+    if (freedom > 70 && order < 30)
+      return { title: "Chaos Reigns!", message: "Too much freedom without order led to instability.", emoji: "⚠️" };
+
+    if (order > 70 && freedom < 30)
+      return { title: "Authoritarian State!", message: "Too much order suppressed fundamental freedoms.", emoji: "🔒" };
+
+    if (Math.abs(freedom - order) < 15)
+      return { title: "Perfect Balance!", message: "You maintained an excellent equilibrium between rights and duties.", emoji: "⚖️" };
+
+    return { title: "Good Effort!", message: "You navigated the scenarios with reasonable balance.", emoji: "👏" };
   };
+
+  // ✅ Track ONLY ON end state (once)
+  useEffect(() => {
+    const trackEnd = async () => {
+      if (gameState !== "end") return;
+      if (trackedRef.current) return;
+
+      trackedRef.current = true;
+
+      const timeTaken = Math.floor((Date.now() - startTimeRef.current) / 1000);
+
+      try {
+        await userStatsAPI.trackGameEnd({
+          sessionId: sessionIdRef.current,
+          gameId: "rights_duties_game",
+          gameName: "Rights vs Duties",
+          timeTaken,
+          isWin: true, // ✅ game completed
+          meta: {
+            finalFreedom: freedom,
+            finalOrder: order,
+            scenariosCompleted: SCENARIOS.length,
+          },
+        });
+      } catch (err) {
+        console.error("trackGameEnd error:", err);
+      }
+    };
+
+    trackEnd();
+  }, [gameState, freedom, order]);
 
   return (
     <div className="w-full min-h-screen bg-slate-900 py-8 px-4">
       <div className="w-full max-w-5xl mx-auto animate-fade-in">
-        {/* Back Button */}
         <button
-          onClick={() => onNavigate('games')}
+          onClick={() => onNavigate("games")}
           className="flex items-center gap-2 text-slate-400 hover:text-orange-400 transition-colors mb-8 group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -112,14 +149,20 @@ export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-xl mb-6">
             <Scale className="w-10 h-10 text-white" />
           </div>
+
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
-            Rights vs. <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">Duties</span>
+            Rights vs{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
+              Duties
+            </span>
           </h1>
-          <p className="text-lg text-slate-400">Navigate complex scenarios and balance freedom with order</p>
+
+          <p className="text-lg text-slate-400">
+            Navigate complex scenarios and balance freedom with order
+          </p>
         </header>
 
-        {/* How to Play Instructions */}
-        {gameState === 'playing' && currentScenarioIndex === 0 && (
+        {gameState === "playing" && currentScenarioIndex === 0 && (
           <Card className="mb-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/30">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -129,8 +172,12 @@ export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }
                 <h3 className="text-lg font-bold text-white mb-2">How to Play</h3>
                 <ol className="text-slate-300 text-sm space-y-1 list-decimal list-inside">
                   <li>Read the scenario carefully</li>
-                  <li><strong>Drag a decision token</strong> from the bottom</li>
-                  <li><strong>Drop it in the decision zone</strong> (the dashed box below)</li>
+                  <li>
+                    <strong>Drag a decision token</strong> from the bottom
+                  </li>
+                  <li>
+                    <strong>Drop it in the decision zone</strong>
+                  </li>
                   <li>See how your choice affects the balance</li>
                   <li>Complete all scenarios to see your final result</li>
                 </ol>
@@ -140,12 +187,12 @@ export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }
         )}
 
         <main>
-          {(gameState === 'playing' || gameState === 'debrief') && (
+          {(gameState === "playing" || gameState === "debrief") && (
             <>
               <BalanceMeter freedom={freedom} order={order} />
-              <ScenarioDisplay 
-                scenario={currentScenario} 
-                currentIndex={currentScenarioIndex} 
+              <ScenarioDisplay
+                scenario={currentScenario}
+                currentIndex={currentScenarioIndex}
                 totalScenarios={SCENARIOS.length}
               />
               <DropScale onDrop={handleTokenDrop} />
@@ -153,77 +200,36 @@ export const RightsDutiesGame: React.FC<RightsDutiesGameProps> = ({ onNavigate }
             </>
           )}
 
-          {gameState === 'debrief' && debriefResult && (
+          {gameState === "debrief" && debriefResult && (
             <Modal isOpen={true} onClose={() => {}} size="lg">
               <div className="text-center">
                 <h2 className="text-3xl font-bold text-orange-400 mb-4">Decision Impact</h2>
+
                 <p className="text-slate-300 text-lg mb-4">
-                  You chose: <span className="font-bold text-white">{debriefResult.token.label}</span>
+                  You chose:{" "}
+                  <span className="font-bold text-white">{debriefResult.token.label}</span>
                 </p>
-                <div className="bg-slate-900/50 p-4 rounded-lg mb-4 border border-slate-700">
-                  <p className="text-slate-400">{debriefResult.token.explanation}</p>
-                </div>
-                {debriefResult.randomEvent && (
-                  <div className="bg-red-900/50 p-4 rounded-lg mb-4 border border-red-500/50">
-                    <h4 className="font-bold text-red-300 mb-2">⚡ Random Event!</h4>
-                    <p className="text-red-200">{debriefResult.randomEvent.desc}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4 my-6">
-                  <div className="bg-slate-700 p-4 rounded-xl">
-                    <p className="text-slate-400 text-sm mb-1">Freedom Change</p>
-                    <p className={`text-2xl font-bold ${
-                      (debriefResult.token.meter.freedom + (debriefResult.randomEvent?.effect.freedom || 0)) >= 0 
-                        ? 'text-sky-400' 
-                        : 'text-red-400'
-                    }`}>
-                      {(debriefResult.token.meter.freedom + (debriefResult.randomEvent?.effect.freedom || 0)) >= 0 ? '+' : ''}
-                      {debriefResult.token.meter.freedom + (debriefResult.randomEvent?.effect.freedom || 0)}
-                    </p>
-                  </div>
-                  <div className="bg-slate-700 p-4 rounded-xl">
-                    <p className="text-slate-400 text-sm mb-1">Order Change</p>
-                    <p className={`text-2xl font-bold ${
-                      (debriefResult.token.meter.order + (debriefResult.randomEvent?.effect.order || 0)) >= 0 
-                        ? 'text-teal-400' 
-                        : 'text-red-400'
-                    }`}>
-                      {(debriefResult.token.meter.order + (debriefResult.randomEvent?.effect.order || 0)) >= 0 ? '+' : ''}
-                      {debriefResult.token.meter.order + (debriefResult.randomEvent?.effect.order || 0)}
-                    </p>
-                  </div>
-                </div>
+
                 <Button onClick={handleNextScenario} variant="primary" size="lg">
-                  {currentScenarioIndex < SCENARIOS.length - 1 ? 'Next Scenario →' : 'See Final Results'}
+                  {currentScenarioIndex < SCENARIOS.length - 1
+                    ? "Next Scenario →"
+                    : "See Final Results"}
                 </Button>
               </div>
             </Modal>
           )}
 
-          {gameState === 'end' && (
-            <div className="text-center max-w-2xl mx-auto p-8 bg-slate-800/80 rounded-2xl animate-fade-in border border-slate-700">
+          {gameState === "end" && (
+            <div className="text-center">
               <div className="text-6xl mb-4">{getFinalMessage().emoji}</div>
               <h2 className="text-4xl font-bold text-white mb-2">{getFinalMessage().title}</h2>
               <p className="text-xl mt-4 text-slate-300 mb-8">{getFinalMessage().message}</p>
-              <div className="mt-8">
-                <h3 className="text-2xl font-semibold mb-4 text-white">Final Equilibrium</h3>
-                <BalanceMeter freedom={freedom} order={order} />
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-8">
-                <div className="bg-slate-700 p-6 rounded-xl">
-                  <p className="text-slate-400 text-sm mb-2">Freedom</p>
-                  <p className="text-4xl font-bold text-sky-400">{freedom}</p>
-                </div>
-                <div className="bg-slate-700 p-6 rounded-xl">
-                  <p className="text-slate-400 text-sm mb-2">Order</p>
-                  <p className="text-4xl font-bold text-teal-400">{order}</p>
-                </div>
-              </div>
+
               <div className="flex gap-3 justify-center mt-8">
                 <Button onClick={restartGame} variant="primary" size="lg">
                   Play Again
                 </Button>
-                <Button onClick={() => onNavigate('games')} variant="outline" size="lg">
+                <Button onClick={() => onNavigate("games")} variant="outline" size="lg">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Games
                 </Button>
