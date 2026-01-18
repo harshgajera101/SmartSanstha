@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, BookOpen } from "lucide-react";
 import { Card } from "../common/Card";
 
 interface RecentReadingItem {
@@ -47,9 +47,9 @@ export const RecentReading: React.FC<RecentReadingProps> = ({
               }
               className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl hover:bg-slate-800 transition-all cursor-pointer group"
             >
-              {/* Article Reference Icon */}
+              {/* ✅ BookOpen Icon (No Emoji) */}
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                📖
+                <BookOpen className="w-5 h-5 text-white" />
               </div>
 
               {/* Text */}
