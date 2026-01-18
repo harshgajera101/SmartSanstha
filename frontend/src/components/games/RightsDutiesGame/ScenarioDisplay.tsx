@@ -1,3 +1,5 @@
+// frontend/src/components/games/RightsDutiesGame/ScenarioDisplay.tsx
+
 import React from 'react';
 import { IScenario } from '../../../types';
 

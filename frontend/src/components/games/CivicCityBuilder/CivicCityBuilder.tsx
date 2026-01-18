@@ -1,3 +1,5 @@
+// frontend/src/components/games/CivicCityBuilder/CivicCityBuilder.tsx
+
 import React, { useState, CSSProperties } from 'react';
 
 // --- TYPES & EXPANDED GAME DATA ---

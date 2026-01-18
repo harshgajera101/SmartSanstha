@@ -1,5 +1,7 @@
+// frontend/src/components/games/RightsDutiesGame/TokenTray.tsx
+
 import React, { DragEvent, useState } from 'react';
-import { IToken } from '../../../types';
+import { IToken } from "../../../types";
 import { Sparkles, GripVertical } from 'lucide-react';
 
 interface TokenTrayProps {

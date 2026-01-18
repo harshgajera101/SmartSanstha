@@ -1,19 +1,17 @@
-import express from 'express';
-import { GoogleGenAI } from '@google/genai';
-import 'dotenv/config';
-import { v4 as uuidv4 } from 'uuid'; // Use uuid for unique IDs
+import express from "express";
+import { GoogleGenAI } from "@google/genai";
+import "dotenv/config";
+import UserStats from "../models/UserStats.js";
+import { v4 as uuidv4 } from "uuid";
+import { verifyAccessToken } from "../middleware/authMiddleware.js"; // ✅ ADD THIS
 
 const router = express.Router();
 
-// -----------------------------------------------------------------
-// 1. GEMINI API INITIALIZATION
-// -----------------------------------------------------------------
-
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const modelName = 'gemini-2.5-flash';
+const modelName = "gemini-2.5-flash";
 
 let genAI;
-let modelsAPI; 
+let modelsAPI;
 
 if (!GEMINI_API_KEY) {
   console.error("❌ FATAL: GEMINI_API_KEY environment variable not set for quiz routes.");
@@ -33,16 +31,18 @@ if (!GEMINI_API_KEY) {
   }
 }
 
-// -----------------------------------------------------------------
-// 2. HELPER FUNCTIONS
-// -----------------------------------------------------------------
-
 const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
+};
+
+async function getOrCreateStats(userId) {
+  let stats = await UserStats.findOne({ user: userId });
+  if (!stats) stats = await UserStats.create({ user: userId });
+  return stats;
 }
 
 async function generateQuizPool(topic) {
@@ -66,98 +66,72 @@ async function generateQuizPool(topic) {
       "explanation": "A brief explanation of why this is the correct answer.",
       "difficulty": "easy" 
     }
-    
+
     Replace "easy" with "medium" or "hard" in the difficulty field as appropriate.
     Ensure each "id" is unique.
     CRITICAL: "correctAnswer" MUST be the zero-based index of the correct option.
     Do not include any text or backticks before or after the JSON object.
   `;
 
-  try {
-    if (!modelsAPI) {
-      throw new Error("Google AI Models API client is not initialized.");
-    }
-    const result = await modelsAPI.generateContent({
-      model: modelName,
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { 
-        // --- THIS WAS THE ERROR ---
-        responseMimeType: "application/json" // Fixed: Was "responseMdimeType"
-      },
-    });
+  if (!modelsAPI) throw new Error("Google AI Models API client is not initialized.");
 
-    const response = result.response || result;
-    const candidates = response.candidates;
+  const result = await modelsAPI.generateContent({
+    model: modelName,
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
 
-    if (!candidates || candidates.length === 0 || !candidates[0].content?.parts?.[0]?.text) {
-      console.error("❌ Unexpected response structure from Gemini API:", JSON.stringify(response, null, 2));
-      throw new Error("Failed to parse response from AI model.");
-    }
-    
-    let jsonText = candidates[0].content.parts[0].text;
-    
-    // --- ADDED LOGGING ---
-    console.log("Raw JSON text from Gemini:", jsonText);
+  const response = result.response || result;
+  const candidates = response.candidates;
 
-    // Clean up potential markdown fences, just in case
-    jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-
-    const questionPool = JSON.parse(jsonText); // This is where the error happened
-    
-    if (!questionPool.easy || !questionPool.medium || !questionPool.hard || 
-        !Array.isArray(questionPool.easy) || !Array.isArray(questionPool.medium) || !Array.isArray(questionPool.hard)) {
-      throw new Error("Generated JSON pool is missing easy/medium/hard arrays.");
-    }
-    
-    const ensureIds = (arr, prefix) => arr.map((q, i) => ({ ...q, id: q.id || `${prefix}${i}-${uuidv4()}` }));
-    questionPool.easy = ensureIds(questionPool.easy, 'e');
-    questionPool.medium = ensureIds(questionPool.medium, 'm');
-    questionPool.hard = ensureIds(questionPool.hard, 'h');
-
-    shuffleArray(questionPool.easy);
-    shuffleArray(questionPool.medium);
-    shuffleArray(questionPool.hard);
-
-    console.log(`✅ Successfully generated and shuffled pool: ${questionPool.easy.length} easy, ${questionPool.medium.length} medium, ${questionPool.hard.length} hard.`);
-    return questionPool;
-
-  } catch (error) {
-    // This catch block is what's sending the error to your frontend
-    console.error('❌ Error generating quiz pool from Gemini:', error.message);
-    const detail = error.response?.data?.error?.message || error.message;
-    throw new Error(`Failed to generate quiz pool from AI model: ${detail}`);
+  if (!candidates || candidates.length === 0 || !candidates[0].content?.parts?.[0]?.text) {
+    console.error("❌ Unexpected response structure from Gemini API:", JSON.stringify(response, null, 2));
+    throw new Error("Failed to parse response from AI model.");
   }
+
+  let jsonText = candidates[0].content.parts[0].text;
+  console.log("Raw JSON text from Gemini:", jsonText);
+
+  jsonText = jsonText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+
+  const questionPool = JSON.parse(jsonText);
+
+  const ensureIds = (arr, prefix) =>
+    arr.map((q, i) => ({ ...q, id: q.id || `${prefix}${i}-${uuidv4()}` }));
+
+  questionPool.easy = ensureIds(questionPool.easy, "e");
+  questionPool.medium = ensureIds(questionPool.medium, "m");
+  questionPool.hard = ensureIds(questionPool.hard, "h");
+
+  shuffleArray(questionPool.easy);
+  shuffleArray(questionPool.medium);
+  shuffleArray(questionPool.hard);
+
+  console.log(
+    `✅ Successfully generated and shuffled pool: ${questionPool.easy.length} easy, ${questionPool.medium.length} medium, ${questionPool.hard.length} hard.`
+  );
+
+  return questionPool;
 }
 
-// -----------------------------------------------------------------
-// 3. QUIZ SESSION STORAGE
-// -----------------------------------------------------------------
 const quizSessions = {};
 
 const sanitizeQuestion = (question) => {
-    if (!question) return null;
-    const { correctAnswer, explanation, ...clientQuestion } = question;
-    return clientQuestion;
+  if (!question) return null;
+  const { correctAnswer, explanation, ...clientQuestion } = question;
+  return clientQuestion;
 };
 
+// ✅ PROTECT START QUIZ (so req.user exists)
+router.post("/start", verifyAccessToken, async (req, res) => {
+  console.log("🎯 /api/quiz/start endpoint was hit!");
 
-// -----------------------------------------------------------------
-// 4. NEW ROUTE: START QUIZ
-// -----------------------------------------------------------------
-router.post('/start', async (req, res) => {
-  console.log('🎯 /api/quiz/start endpoint was hit!');
-  
   const { part } = req.body;
-  if (!part) {
-    return res.status(400).json({ success: false, error: 'Missing "part" (topic).' });
-  }
-
-  if (!modelsAPI) {
-    return res.status(503).json({ success: false, error: 'Service unavailable: API Key/Model API failed to initialize.' });
-  }
+  if (!part) return res.status(400).json({ success: false, error: 'Missing "part" (topic).' });
 
   try {
-    // This function is the one that was failing
     const questionPool = await generateQuizPool(part);
 
     const quizId = uuidv4();
@@ -165,7 +139,7 @@ router.post('/start', async (req, res) => {
       quizId,
       part,
       pool: questionPool,
-      currentDifficulty: 'easy', 
+      currentDifficulty: "easy",
       poolIndex: { easy: 0, medium: 0, hard: 0 },
       score: 0,
       questionsAnswered: 0,
@@ -177,54 +151,44 @@ router.post('/start', async (req, res) => {
     session.poolIndex.easy++;
     session.lastQuestion = firstQuestion;
     session.questionsAnswered = 1;
-    
-    console.log(`[Quiz ${quizId}] Starting quiz. Allotting first question (easy).`);
 
     quizSessions[quizId] = session;
 
-    res.json({
+    return res.json({
       success: true,
       quizId,
       question: sanitizeQuestion(firstQuestion),
       questionNumber: session.questionsAnswered,
-      totalQuestions: session.totalQuestions
+      totalQuestions: session.totalQuestions,
     });
-
   } catch (error) {
-    // If generateQuizPool throws an error, this catch block runs
-    console.error('❌ Error in /api/quiz/start:', error.message);
-    // This sends the 500 error to the frontend
-    res.status(500).json({ success: false, error: error.message });
+    console.error("❌ Error in /api/quiz/start:", error.message);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// ✅ MAKE ANSWER ROUTE ASYNC + PROTECTED ✅
+router.post("/answer", verifyAccessToken, async (req, res) => {
+  console.log("🎯 /api/quiz/answer endpoint was hit!");
 
-// -----------------------------------------------------------------
-// 5. NEW ROUTE: SUBMIT ANSWER
-// -----------------------------------------------------------------
-router.post('/answer', (req, res) => {
-  console.log('🎯 /api/quiz/answer endpoint was hit!');
   const { quizId, questionId, answerIndex } = req.body;
 
   if (!quizId || !questionId || answerIndex === undefined) {
-    return res.status(400).json({ success: false, error: 'Missing quizId, questionId, or answerIndex.' });
+    return res.status(400).json({ success: false, error: "Missing quizId, questionId, or answerIndex." });
   }
 
   const session = quizSessions[quizId];
   if (!session) {
-    return res.status(404).json({ success: false, error: 'Quiz session not found or has expired.' });
+    return res.status(404).json({ success: false, error: "Quiz session not found or has expired." });
   }
 
   const lastQuestion = session.lastQuestion;
   if (lastQuestion.id !== questionId) {
-    return res.status(400).json({ success: false, error: 'Question ID mismatch. Out of sync?' });
+    return res.status(400).json({ success: false, error: "Question ID mismatch. Out of sync?" });
   }
 
-  const isCorrect = (lastQuestion.correctAnswer === answerIndex);
-  if (isCorrect) {
-    session.score++;
-  }
-  console.log(`[Quiz ${quizId}] User answered question ${session.questionsAnswered} (${lastQuestion.difficulty}). Correct: ${isCorrect}`);
+  const isCorrect = lastQuestion.correctAnswer === answerIndex;
+  if (isCorrect) session.score++;
 
   const result = {
     isCorrect,
@@ -232,28 +196,45 @@ router.post('/answer', (req, res) => {
     explanation: lastQuestion.explanation,
   };
 
+  // ✅ QUIZ OVER -> SAVE IN DB
   if (session.questionsAnswered >= session.totalQuestions) {
     console.log(`[Quiz ${quizId}] Quiz finished. Score: ${session.score}/${session.totalQuestions}`);
+
+    try {
+      const userId = req.user._id; // ✅ req.user exists now
+
+      const stats = await getOrCreateStats(userId);
+
+      stats.quizzesTaken = (stats.quizzesTaken || 0) + 1;
+      stats.totalScore = (stats.totalScore || 0) + session.score;
+      stats.lastActive = new Date();
+
+      await stats.save();
+      console.log("✅ Quiz progress saved in MongoDB");
+    } catch (err) {
+      console.error("❌ Failed to save quiz progress:", err.message);
+    }
+
     delete quizSessions[quizId];
+
     return res.json({
       success: true,
       quizOver: true,
       result,
       finalScore: session.score,
-      totalQuestions: session.totalQuestions
+      totalQuestions: session.totalQuestions,
     });
   }
 
+  // continue quiz
   let nextDifficulty;
   if (isCorrect) {
-    if (session.currentDifficulty === 'easy') nextDifficulty = 'medium';
-    else if (session.currentDifficulty === 'medium') nextDifficulty = 'hard';
-    else nextDifficulty = 'hard'; 
+    if (session.currentDifficulty === "easy") nextDifficulty = "medium";
+    else if (session.currentDifficulty === "medium") nextDifficulty = "hard";
+    else nextDifficulty = "hard";
   } else {
-    nextDifficulty = 'easy';
+    nextDifficulty = "easy";
   }
-  
-  console.log(`[Quiz ${quizId}] Logic: Answer was ${isCorrect ? 'Correct' : 'Incorrect'}. Current difficulty: ${session.currentDifficulty}. Attempting to allot next: ${nextDifficulty}`);
 
   let nextQuestion = null;
   let pool = session.pool[nextDifficulty];
@@ -261,36 +242,32 @@ router.post('/answer', (req, res) => {
 
   if (index < pool.length) {
     nextQuestion = pool[index];
-    session.poolIndex[nextDifficulty]++; 
-    console.log(`[Quiz ${quizId}] ✅ Allotted ${nextDifficulty} question #${index} from pool.`);
+    session.poolIndex[nextDifficulty]++;
   } else {
-    console.warn(`[Quiz ${quizId}] ⚠️ Pool for '${nextDifficulty}' exhausted (index ${index} >= ${pool.length}). Falling back to 'easy'.`);
-    nextDifficulty = 'easy';
+    nextDifficulty = "easy";
     pool = session.pool.easy;
     index = session.poolIndex.easy;
 
     if (index >= pool.length) {
-      console.warn(`[Quiz ${quizId}] ⚠️ Easy pool also exhausted. Wrapping around to easy[0].`);
       session.poolIndex.easy = 0;
       index = 0;
     }
-    
+
     nextQuestion = pool[index];
-    session.poolIndex.easy++; 
-    console.log(`[Quiz ${quizId}] ✅ Allotted fallback easy question #${index}.`);
+    session.poolIndex.easy++;
   }
 
-  session.currentDifficulty = nextDifficulty; 
+  session.currentDifficulty = nextDifficulty;
   session.questionsAnswered++;
-  session.lastQuestion = nextQuestion; 
+  session.lastQuestion = nextQuestion;
 
-  res.json({
+  return res.json({
     success: true,
     quizOver: false,
-    result, 
-    question: sanitizeQuestion(nextQuestion), 
+    result,
+    question: sanitizeQuestion(nextQuestion),
     questionNumber: session.questionsAnswered,
-    totalQuestions: session.totalQuestions
+    totalQuestions: session.totalQuestions,
   });
 });
 

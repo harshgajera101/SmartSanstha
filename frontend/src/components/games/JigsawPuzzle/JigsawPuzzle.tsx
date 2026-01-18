@@ -1,3 +1,5 @@
+// frontend/src/components/games/JigsawPuzzle/JigsawPuzzle.tsx
+
 import React, { useState, useEffect, CSSProperties } from 'react';
 import { ProgressBar } from '../../common/ProgressBar';
 

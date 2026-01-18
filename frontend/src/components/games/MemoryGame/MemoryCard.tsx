@@ -1,3 +1,5 @@
+// frontend/src/components/games/MemoryGame/MemoryCard.tsx
+
 import React from 'react';
 import { Brain, CheckCircle, Lightbulb } from 'lucide-react';
 import { ArticleCard } from '../../../types';

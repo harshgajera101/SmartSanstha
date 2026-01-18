@@ -1,3 +1,5 @@
+// frontend/src/components/games/RightsDutiesGame/RightsDutiesGame.tsx
+
 import React, { useState } from 'react';
 import { Scale, Info, ArrowLeft } from 'lucide-react';
 import { SCENARIOS } from '../../../data/gamesData';

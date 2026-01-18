@@ -1,5 +1,7 @@
+// frontend/src/components/games/RightsDutiesGame/DropScale.tsx
+
 import React, { DragEvent, useState } from 'react';
-import { IToken } from '../../../types';
+import { IToken } from "../../../types";
 import { Scale, MousePointerClick, MoveDown } from 'lucide-react';
 
 interface DropScaleProps {

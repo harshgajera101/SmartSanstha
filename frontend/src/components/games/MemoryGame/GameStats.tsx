@@ -1,3 +1,5 @@
+// frontend/src/components/games/MemoryGame/GameStats.tsx
+
 import React from 'react';
 import { Target, CheckCircle, Clock, Trophy, RotateCcw } from 'lucide-react';
 import { Button } from '../../common/Button';

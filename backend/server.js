@@ -15,6 +15,9 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import progressRoutes from "./routes/progressRoutes.js";
+import { verifyAccessToken } from "./middleware/authMiddleware.js";
+
+
 
 // --- Path resolution for ES Modules ---
 const __filename = fileURLToPath(import.meta.url);
@@ -124,7 +127,7 @@ app.get('/api/test', (req, res) => {
 // Mount route modules
 app.use('/api/articles', articleRoutes);
 app.use('/api/chatbot', chatbotRoutes);
-app.use('/api/quiz', quizRoutes);
+app.use('/api/quiz', verifyAccessToken, quizRoutes);
 app.use('/api/court', courtRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);

@@ -21,28 +21,38 @@ export interface ArticleData {
   }[];
 }
 
+export interface IMeterEffect {
+  freedom: number;
+  order: number;
+}
+
+export interface IToken {
+  id: string;
+  label: string;
+  meter: IMeterEffect;
+  explanation: string;
+}
+
+export interface IRandomEvent {
+  chance: number;
+  effect: IMeterEffect;
+  desc: string;
+}
+
+export interface IScenario {
+  id: string;
+  title: string;
+  description: string;
+  tokens: IToken[];
+  randomEvents?: IRandomEvent[];
+}
+
+
+
 // The type for a single flippable card on the Memory Game board
 // It inherits everything from ArticleData and adds game-specific properties
 export interface ArticleCard extends ArticleData {
   uid: string;
   flipped: boolean;
   matched: boolean;
-}
-
-// The type for the scenarios in your Rights vs. Duties game
-export interface IScenario {
-  id: string;
-  title: string;
-  description: string;
-  tokens: {
-    id: string;
-    label: string;
-    meter: { freedom: number; order: number };
-    explanation: string;
-  }[];
-  randomEvents?: {
-    chance: number;
-    effect: { freedom: number; order: number };
-    desc: string;
-  }[];
 }

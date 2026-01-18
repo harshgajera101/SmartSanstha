@@ -1,3 +1,5 @@
+// frontend/src/components/games/MemoryGame/MemoryGame.tsx
+
 import React, { useEffect, useState, useMemo } from "react";
 import { Brain, RotateCcw, Trophy, CheckCircle, ArrowLeft } from "lucide-react";
 import { Button } from "../../common/Button";

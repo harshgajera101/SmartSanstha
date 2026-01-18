@@ -1,3 +1,5 @@
+// frontend/src/components/games/RightsDutiesGame/BalanceMeter.tsx
+
 import React from 'react';
 import { Scale } from 'lucide-react';
 

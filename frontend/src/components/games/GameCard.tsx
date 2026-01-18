@@ -1,3 +1,5 @@
+// frontend/src/components/games/GameCard.tsx
+
 import React from 'react';
 import { Clock, Lock, Brain, Scale, Zap, Puzzle, Lightbulb, Building2, Landmark, Gamepad2 } from 'lucide-react';
 import { Card } from '../common/Card';
