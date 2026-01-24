@@ -40,7 +40,7 @@ console.log('⚙️  Setting up middleware...');
 const allowedOrigins = [
   'http://localhost:5173',                   // local Vite
   'https://smartsanstha-7zax.onrender.com', // your deployed frontend
-  'https://hoppscotch.io',
+  // 'https://hoppscotch.io',
 ];
 
 app.use(
