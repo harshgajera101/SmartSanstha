@@ -8,10 +8,6 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-        <App />
-    </BrowserRouter>
+      <App />
   </React.StrictMode>
 )
-
-// sekhar code lateset copied full
