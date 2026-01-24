@@ -302,7 +302,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase";
 
-import { User, Mail, KeyRound, Calendar, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, KeyRound, Calendar, LogIn, UserPlus, Eye, EyeOff, Shield } from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -313,6 +313,7 @@ interface UserData {
 
 interface AuthPageProps {
   onLoginSuccess: (userData: UserData) => void;
+  onNavigate: (page: string) => void; // ✅ Add this
 }
 
 // --- Styled Components ---
@@ -362,7 +363,7 @@ const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({ icon, 
 
 // --- Main Component ---
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigate }) => {
   const [isLoginView, setIsLoginView] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -688,6 +689,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
               : "Already have an account? Sign In"}
           </button>
         </div>
+
+
+        {isLoginView && (
+    <div className="mt-4 pt-4 border-t border-slate-700">
+      <button
+        onClick={() => {
+          // ✅ FIXED: Use onNavigate instead of window.location
+          onNavigate('admin-login');
+        }}
+        className="w-full text-sm text-slate-500 hover:text-orange-400 transition-colors flex items-center justify-center gap-2"
+      >
+        <Shield className="w-4 h-4" />
+        Admin Login
+      </button>
+    </div>
+  )}
+
       </Card>
     </div>
   );

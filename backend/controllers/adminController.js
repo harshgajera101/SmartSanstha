@@ -131,3 +131,73 @@ export const deleteAdmin = async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+/**
+ * Get Admin Dashboard Statistics
+ */
+export const getAdminStats = async (req, res) => {
+  try {
+    // 1. Total Users
+    const totalUsers = await User.countDocuments();
+
+    // 2. User Category Distribution
+    const categoryDistribution = await User.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // 3. Recent Signups (Last 10 users)
+    const recentSignups = await User.find()
+      .select('name email category createdAt')
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    // 4. User Signups Over Time (Last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const signupsOverTime = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // 5. Total Admins
+    const totalAdmins = await Admin.countDocuments();
+
+    return res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        totalAdmins,
+        categoryDistribution,
+        recentSignups,
+        signupsOverTime,
+      }
+    });
+  } catch (err) {
+    console.error('Get admin stats error:', err);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Server error fetching statistics' 
+    });
+  }
+};

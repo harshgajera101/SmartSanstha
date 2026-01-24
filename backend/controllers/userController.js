@@ -3,11 +3,31 @@ import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import getCategoryFromDOB from '../utils/categorize.js';
 
+
 export const getProfile = async (req, res) => {
-  if (!req.profile) {
-    return res.status(404).json({ message: 'Profile not found' });
+  try {
+    if (!req.user && !req.profile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+    
+    const profile = req.profile || req.user;
+    
+    // ✅ Determine type from req.user.type (set by middleware)
+    const userType = req.user?.type || 'user';
+    
+    return res.json({ 
+      profile: {
+        id: profile._id.toString(),
+        name: profile.name,
+        email: profile.email,
+        category: profile.category,
+        type: userType // ✅ Add this
+      }
+    });
+  } catch (err) {
+    console.error('getProfile error:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
-  return res.json({ profile: req.profile });
 };
 
 export const updateProfile = async (req, res) => {

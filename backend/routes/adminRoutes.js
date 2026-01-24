@@ -22,4 +22,6 @@ router.get('/admins', adminController.getAllAdmins);
 router.put('/admins/:id', adminController.updateAdmin);
 router.delete('/admins/:id', adminController.deleteAdmin);
 
+router.get('/stats', adminController.getAdminStats);
+
 export default router;

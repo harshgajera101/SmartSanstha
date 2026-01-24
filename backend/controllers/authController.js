@@ -310,7 +310,6 @@ export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ 
         success: false,
@@ -318,7 +317,6 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    // Find admin by email
     const admin = await Admin.findOne({ email: email.toLowerCase() });
     if (!admin) {
       return res.status(401).json({ 
@@ -327,7 +325,6 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    // Verify password
     const match = await bcrypt.compare(password, admin.password);
     if (!match) {
       return res.status(401).json({ 
@@ -336,11 +333,9 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    // Create tokens
     const accessToken = createAccessToken({ id: admin._id, type: 'admin' });
     const refreshToken = createRefreshToken({ id: admin._id, type: 'admin' });
 
-    // Set cookies
     res.cookie('accessToken', accessToken, { 
       ...cookieOptions, 
       maxAge: 15 * 60 * 1000 
@@ -350,13 +345,15 @@ export const loginAdmin = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 
     });
 
+    // ✅ UPDATED: Include type in response
     return res.json({
       success: true,
       message: 'Admin logged in successfully',
       admin: { 
         id: admin._id, 
         name: admin.name, 
-        email: admin.email 
+        email: admin.email,
+        type: 'admin' // ✅ Add this
       },
     });
   } catch (err) {

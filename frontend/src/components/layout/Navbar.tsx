@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import {
   BookOpen, Menu, X, Home, BookMarked, Gamepad2, User,
-  BarChart3, Mail, Scale, LogIn, LogOut
+  BarChart3, Mail, Scale, LogIn, LogOut,
+  Shield
 } from 'lucide-react';
 
 interface UserData {
   name: string;
+  type?: string; //added for admin badge
 }
 
 interface NavbarProps {
@@ -117,6 +119,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, user, o
               <>
                 <span className="text-sm text-slate-300 px-4 border-l border-slate-700 ml-2">
                   Hi, {user.name.split(' ')[0]}
+                  {user.type === 'admin' && (
+  <span className="inline-flex items-center px-2 py-0.5 
+                   bg-orange-500/20 border border-orange-500/30 
+                   rounded text-orange-400 text-xs font-semibold">
+    <Shield className="w-3.5 h-3.5" />
+  </span>
+)}
                 </span>
                 <button onClick={onLogout} className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                   <LogOut className="w-4 h-4" /> Logout
