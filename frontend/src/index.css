@@ -35,3 +35,40 @@ body {
 .link {
   @apply text-blue-700 hover:text-blue-900 underline;
 }
+
+
+
+/* --- GOOGLE TRANSLATE OVERRIDES --- */
+
+/* 1. Hide the top banner iframe */
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+
+/* 2. Force body to top (Google tries to add top: 40px) */
+body {
+    top: 0px !important;
+}
+
+/* 3. Hide the popup tooltips on hover */
+.goog-tooltip {
+    display: none !important;
+}
+.goog-tooltip:hover {
+    display: none !important;
+}
+
+/* 4. Remove the blue/highlight background on translated text */
+.goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* 5. Hide the Google branding in the dropdown (Optional) */
+.goog-logo-link {
+    display: none !important;
+}
+.goog-te-gadget {
+    color: transparent !important;
+}

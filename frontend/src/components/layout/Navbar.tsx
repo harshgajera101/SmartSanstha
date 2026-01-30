@@ -1,4 +1,7 @@
+// // frontend/src/components/layout/Navbar.tsx
+
 // import React, { useState } from 'react';
+// import { Link, useLocation } from 'react-router-dom';
 // import {
 //   BookOpen,
 //   Menu,
@@ -6,7 +9,7 @@
 //   Home,
 //   BookMarked,
 //   Gamepad2,
-//   User,
+//   User as UserIcon,
 //   BarChart3,
 //   Mail,
 //   Scale,
@@ -14,70 +17,56 @@
 //   LogOut,
 //   Shield,
 // } from 'lucide-react';
+// // Import Language Switcher
+// import { LanguageSwitcher } from './LanguageSwitcher'; 
 
 // interface UserData {
 //   name: string;
-//   type?: string; // 'admin'
+//   type?: string;
 // }
 
 // interface NavbarProps {
-//   currentPage: string;
-//   onNavigate: (page: string) => void;
 //   user: UserData | null;
 //   onLogout: () => void;
 // }
 
-// export const Navbar: React.FC<NavbarProps> = ({
-//   currentPage,
-//   onNavigate,
-//   user,
-//   onLogout,
-// }) => {
+// export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 //   const [isMenuOpen, setIsMenuOpen] = useState(false);
+//   const location = useLocation();
 
 //   /* -------------------- Navigation Items -------------------- */
 
 //   const startItems = [
-//     { id: 'home', label: 'Home', icon: Home },
-//     { id: 'about', label: 'About', icon: User },
+//     { id: 'home', label: 'Home', icon: Home, path: '/' },
+//     { id: 'about', label: 'About', icon: UserIcon, path: '/about' },
 //   ];
 
-//   const contactItem = { id: 'contact', label: 'Contact', icon: Mail };
+//   const contactItem = { id: 'contact', label: 'Contact', icon: Mail, path: '/contact' };
 
 //   const authenticatedItems = [
-//     { id: 'learn', label: 'Learn', icon: BookMarked },
-//     { id: 'games', label: 'Games', icon: Gamepad2 },
-//     { id: 'court-simulation', label: 'Court', icon: Scale },
-//     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+//     { id: 'learn', label: 'Learn', icon: BookMarked, path: '/learn' },
+//     { id: 'games', label: 'Games', icon: Gamepad2, path: '/games' },
+//     { id: 'court-simulation', label: 'Court', icon: Scale, path: '/court-simulation' },
+//     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
 //   ];
 
 //   const navItems = user
 //     ? [...startItems, ...authenticatedItems, contactItem]
 //     : [...startItems, contactItem];
 
-//   const checkActive = (id: string) =>
-//     currentPage === id ||
-//     (id === 'games' &&
-//       ['memory-game', 'rights-duties-game'].includes(currentPage));
+//   const checkActive = (path: string) => {
+//     if (path === '/') return location.pathname === '/';
+//     return location.pathname.startsWith(path);
+//   };
 
 //   /* -------------------- Reusable Links -------------------- */
 
-//   const NavLink = ({
-//     item,
-//     action,
-//     children,
-//     customActive,
-//   }: {
-//     item?: any;
-//     action?: () => void;
-//     children: React.ReactNode;
-//     customActive?: boolean;
-//   }) => {
-//     const isActive = customActive || (item && checkActive(item.id));
+//   const NavLink = ({ item }: { item: any }) => {
+//     const isActive = checkActive(item.path);
 
 //     return (
-//       <button
-//         onClick={action || (() => item && onNavigate(item.id))}
+//       <Link
+//         to={item.path}
 //         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
 //           ${
 //             isActive
@@ -85,28 +74,19 @@
 //               : 'text-slate-300 hover:bg-slate-800 hover:text-white'
 //           }`}
 //       >
-//         {children}
-//       </button>
+//         {item.label}
+//       </Link>
 //     );
 //   };
 
-//   const MobileNavLink = ({
-//     item,
-//     action,
-//     children,
-//     customActive,
-//   }: {
-//     item?: any;
-//     action?: () => void;
-//     children: React.ReactNode;
-//     customActive?: boolean;
-//   }) => {
-//     const Icon = item?.icon;
-//     const isActive = customActive || (item && checkActive(item.id));
+//   const MobileNavLink = ({ item }: { item: any }) => {
+//     const Icon = item.icon;
+//     const isActive = checkActive(item.path);
 
 //     return (
-//       <button
-//         onClick={action || (() => item && onNavigate(item.id))}
+//       <Link
+//         to={item.path}
+//         onClick={() => setIsMenuOpen(false)}
 //         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all
 //           ${
 //             isActive
@@ -114,9 +94,9 @@
 //               : 'text-slate-300 hover:bg-slate-800 hover:text-white'
 //           }`}
 //       >
-//         {Icon && <Icon className="w-5 h-5" />}
-//         {children}
-//       </button>
+//         <Icon className="w-5 h-5" />
+//         {item.label}
+//       </Link>
 //     );
 //   };
 
@@ -127,10 +107,7 @@
 //       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 //         <div className="flex items-center justify-between h-16">
 //           {/* Logo */}
-//           <div
-//             className="flex items-center gap-2 cursor-pointer group"
-//             onClick={() => onNavigate('home')}
-//           >
+//           <Link to="/" className="flex items-center gap-2 group">
 //             <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-lg group-hover:shadow-orange-500/40 transition-all">
 //               <BookOpen className="w-6 h-6 text-white" />
 //             </div>
@@ -142,15 +119,18 @@
 //                 Learn. Play. Grow.
 //               </p>
 //             </div>
-//           </div>
+//           </Link>
 
 //           {/* Desktop Navigation */}
 //           <nav className="hidden md:flex items-center space-x-2">
 //             {navItems.map((item) => (
-//               <NavLink key={item.id} item={item}>
-//                 {item.label}
-//               </NavLink>
+//               <NavLink key={item.id} item={item} />
 //             ))}
+
+//             {/* Language Switcher - Desktop */}
+//             <div className="ml-2 pl-2 border-l border-slate-700">
+//               <LanguageSwitcher />
+//             </div>
 
 //             {user ? (
 //               <>
@@ -159,10 +139,7 @@
 //                   {user.type === 'admin' ? (
 //                     <>
 //                       <span className="text-sm text-slate-300">Hi</span>
-//                       <span className="inline-flex items-center gap-1 px-2 py-0.5
-//                       bg-orange-500/15 border border-orange-500/30
-//                       rounded-full text-orange-400 text-xs font-semibold
-//                       transition-all">
+//                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500/15 border border-orange-500/30 rounded-full text-orange-400 text-xs font-semibold">
 //                         <Shield className="w-3.5 h-3.5" />
 //                         Admin
 //                       </span>
@@ -177,41 +154,46 @@
 //                 {/* Logout */}
 //                 <button
 //                   onClick={onLogout}
-//                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
-//                     text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+//                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
 //                 >
 //                   <LogOut className="w-4 h-4" />
 //                   Logout
 //                 </button>
 //               </>
 //             ) : (
-//               <NavLink
-//                 action={() => onNavigate('auth')}
-//                 customActive={currentPage === 'auth'}
+//               <Link
+//                 to="/login"
+//                 className={`ml-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+//                   ${
+//                     location.pathname === '/login'
+//                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+//                       : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+//                   }`}
 //               >
 //                 Sign In
-//               </NavLink>
+//               </Link>
 //             )}
 //           </nav>
 
 //           {/* Mobile Menu Button */}
-//           <button
-//             onClick={() => setIsMenuOpen(!isMenuOpen)}
-//             className="md:hidden p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
-//           >
-//             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-//           </button>
+//           <div className="flex items-center gap-4 md:hidden">
+//             <LanguageSwitcher /> {/* Mobile switcher in header for easy access */}
+//             <button
+//               onClick={() => setIsMenuOpen(!isMenuOpen)}
+//               className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
+//             >
+//               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+//             </button>
+//           </div>
 //         </div>
 //       </div>
 
 //       {/* Mobile Navigation */}
 //       {isMenuOpen && (
-//         <div className="md:hidden border-t border-slate-800">
+//         <div className="md:hidden border-t border-slate-800 animate-fade-in">
 //           <nav className="px-4 py-3 space-y-2">
 //             {navItems.map((item) => (
-//               <MobileNavLink key={item.id} item={item}>
-//                 {item.label}
-//               </MobileNavLink>
+//               <MobileNavLink key={item.id} item={item} />
 //             ))}
 
 //             {user && (
@@ -219,10 +201,7 @@
 //                 {user.type === 'admin' ? (
 //                   <>
 //                     <span className="text-sm text-slate-300">Hi</span>
-//                     <span className="inline-flex items-center gap-1 px-2 py-0.5
-//                       bg-orange-500/15 border border-orange-500/30
-//                       rounded-full text-orange-400 text-xs font-semibold
-//                       transition-all">
+//                     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500/15 border border-orange-500/30 rounded-full text-orange-400 text-xs font-semibold">
 //                       <Shield className="w-3.5 h-3.5" />
 //                       Admin
 //                     </span>
@@ -237,18 +216,25 @@
 
 //             <div className="pt-2 border-t border-slate-700/50">
 //               {user ? (
-//                 <MobileNavLink action={onLogout}>
+//                 <button
+//                   onClick={() => {
+//                     onLogout();
+//                     setIsMenuOpen(false);
+//                   }}
+//                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+//                 >
 //                   <LogOut className="w-5 h-5" />
 //                   Logout
-//                 </MobileNavLink>
+//                 </button>
 //               ) : (
-//                 <MobileNavLink
-//                   action={() => onNavigate('auth')}
-//                   customActive={currentPage === 'auth'}
+//                 <Link
+//                   to="/login"
+//                   onClick={() => setIsMenuOpen(false)}
+//                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
 //                 >
 //                   <LogIn className="w-5 h-5" />
 //                   Sign In
-//                 </MobileNavLink>
+//                 </Link>
 //               )}
 //             </div>
 //           </nav>
@@ -271,9 +257,12 @@
 
 
 
+
+
+
 // frontend/src/components/layout/Navbar.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   BookOpen,
@@ -282,7 +271,7 @@ import {
   Home,
   BookMarked,
   Gamepad2,
-  User,
+  User as UserIcon,
   BarChart3,
   Mail,
   Scale,
@@ -290,6 +279,7 @@ import {
   LogOut,
   Shield,
 } from 'lucide-react';
+import { LanguageSwitcher } from './LanguageSwitcher'; 
 
 interface UserData {
   name: string;
@@ -301,77 +291,73 @@ interface NavbarProps {
   onLogout: () => void;
 }
 
+// Optimization: Extracted components
+const NavLink = React.memo(({ item, isActive }: { item: any; isActive: boolean }) => (
+  <Link
+    to={item.path}
+    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+      ${
+        isActive
+          ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+      }`}
+  >
+    {item.label}
+  </Link>
+));
+
+const MobileNavLink = React.memo(({ item, isActive, onClick }: { item: any; isActive: boolean; onClick: () => void }) => {
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.path}
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all
+        ${
+          isActive
+            ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+        }`}
+    >
+      <Icon className="w-5 h-5" />
+      {item.label}
+    </Link>
+  );
+});
+
 export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  /* -------------------- Navigation Items -------------------- */
+  const navItems = useMemo(() => {
+    const startItems = [
+      { id: 'home', label: 'Home', icon: Home, path: '/' },
+      { id: 'about', label: 'About', icon: UserIcon, path: '/about' },
+    ];
+    const contactItem = { id: 'contact', label: 'Contact', icon: Mail, path: '/contact' };
+    const authenticatedItems = [
+      { id: 'learn', label: 'Learn', icon: BookMarked, path: '/learn' },
+      { id: 'games', label: 'Games', icon: Gamepad2, path: '/games' },
+      { id: 'court-simulation', label: 'Court', icon: Scale, path: '/court-simulation' },
+      { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
+    ];
 
-  const startItems = [
-    { id: 'home', label: 'Home', icon: Home, path: '/' },
-    { id: 'about', label: 'About', icon: User, path: '/about' },
-  ];
+    return user
+      ? [...startItems, ...authenticatedItems, contactItem]
+      : [...startItems, contactItem];
+  }, [user]);
 
-  const contactItem = { id: 'contact', label: 'Contact', icon: Mail, path: '/contact' };
-
-  const authenticatedItems = [
-    { id: 'learn', label: 'Learn', icon: BookMarked, path: '/learn' },
-    { id: 'games', label: 'Games', icon: Gamepad2, path: '/games' },
-    { id: 'court-simulation', label: 'Court', icon: Scale, path: '/court-simulation' },
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
-  ];
-
-  const navItems = user
-    ? [...startItems, ...authenticatedItems, contactItem]
-    : [...startItems, contactItem];
-
-  const checkActive = (path: string) => {
+  const checkActive = useCallback((path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
-  };
+  }, [location.pathname]);
 
-  /* -------------------- Reusable Links -------------------- */
-
-  const NavLink = ({ item }: { item: any }) => {
-    const isActive = checkActive(item.path);
-
-    return (
-      <Link
-        to={item.path}
-        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
-          ${
-            isActive
-              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
-      >
-        {item.label}
-      </Link>
-    );
-  };
-
-  const MobileNavLink = ({ item }: { item: any }) => {
-    const Icon = item.icon;
-    const isActive = checkActive(item.path);
-
-    return (
-      <Link
-        to={item.path}
-        onClick={() => setIsMenuOpen(false)}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all
-          ${
-            isActive
-              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
-      >
-        <Icon className="w-5 h-5" />
-        {item.label}
-      </Link>
-    );
-  };
-
-  /* -------------------- JSX -------------------- */
+  const toggleMenu = useCallback(() => setIsMenuOpen(prev => !prev), []);
+  const closeMenu = useCallback(() => setIsMenuOpen(false), []);
+  const handleLogout = useCallback(() => {
+    onLogout();
+    setIsMenuOpen(false);
+  }, [onLogout]);
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-lg border-b border-slate-800">
@@ -395,12 +381,15 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-2">
             {navItems.map((item) => (
-              <NavLink key={item.id} item={item} />
+              <NavLink key={item.id} item={item} isActive={checkActive(item.path)} />
             ))}
+
+            <div className="ml-2 pl-2 border-l border-slate-700">
+              <LanguageSwitcher />
+            </div>
 
             {user ? (
               <>
-                {/* User / Admin Indicator */}
                 <div className="flex items-center gap-2 px-4 ml-2 border-l border-slate-700">
                   {user.type === 'admin' ? (
                     <>
@@ -416,10 +405,8 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                     </span>
                   )}
                 </div>
-
-                {/* Logout */}
                 <button
-                  onClick={onLogout}
+                  onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
@@ -429,7 +416,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             ) : (
               <Link
                 to="/login"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                className={`ml-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
                   ${
                     location.pathname === '/login'
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
@@ -442,21 +429,29 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           </nav>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-4 md:hidden">
+            <LanguageSwitcher />
+            <button
+              onClick={toggleMenu}
+              className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-slate-800">
+        <div className="md:hidden border-t border-slate-800 animate-fade-in">
           <nav className="px-4 py-3 space-y-2">
             {navItems.map((item) => (
-              <MobileNavLink key={item.id} item={item} />
+              <MobileNavLink 
+                key={item.id} 
+                item={item} 
+                isActive={checkActive(item.path)}
+                onClick={closeMenu}
+              />
             ))}
 
             {user && (
@@ -480,10 +475,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             <div className="pt-2 border-t border-slate-700/50">
               {user ? (
                 <button
-                  onClick={() => {
-                    onLogout();
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
                 >
                   <LogOut className="w-5 h-5" />
@@ -492,7 +484,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               ) : (
                 <Link
                   to="/login"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
                 >
                   <LogIn className="w-5 h-5" />
