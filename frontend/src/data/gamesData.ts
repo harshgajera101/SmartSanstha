@@ -1,3 +1,5 @@
+// frontend/src/data/gamesData.ts
+
 import { Game, IScenario } from '../types';
 
 export const GAMES: Game[] = [
@@ -10,7 +12,8 @@ export const GAMES: Game[] = [
     estMinutes: 5,
     icon: 'Brain',
     isAvailable: true,
-    route: 'memory-game'
+    // FIXED: Changed from 'memory-game' to '/games/memory' to match App.tsx
+    route: '/games/memory'
   },
   {
     id: 'civic-city-builder',
@@ -21,7 +24,8 @@ export const GAMES: Game[] = [
     estMinutes: 5,
     icon: 'Building', 
     isAvailable: true,
-    route: 'civic-city-builder',
+    // FIXED: Changed from 'civic-city-builder' to '/games/civic-builder' to match App.tsx
+    route: '/games/civic-builder',
   },
   {
     id: 'rights-duties',
@@ -32,18 +36,20 @@ export const GAMES: Game[] = [
     estMinutes: 10,
     icon: 'Scale',
     isAvailable: true,
-    route: 'rights-duties-game'
+    // FIXED: Changed from 'rights-duties-game' to '/games/rights-duties' to match App.tsx
+    route: '/games/rights-duties'
   },
   {
-  id: 'jigsaw-puzzle',
-  title: 'Constitutional Jigsaw',
-  subtitle: 'Piece together constitutional knowledge',
-  description: 'Arrange puzzle pieces to complete images related to the Constitution and learn about each article.',
-  difficulty: 'medium',
-  estMinutes: 8,
-  icon: 'Puzzle', // Lucide icon
-  isAvailable: true, // Set to true to make it playable
-  route: 'jigsaw-puzzle'
+    id: 'jigsaw-puzzle',
+    title: 'Constitutional Jigsaw',
+    subtitle: 'Piece together constitutional knowledge',
+    description: 'Arrange puzzle pieces to complete images related to the Constitution and learn about each article.',
+    difficulty: 'medium',
+    estMinutes: 8,
+    icon: 'Puzzle',
+    isAvailable: true,
+    // FIXED: Changed from 'jigsaw-puzzle' to '/games/jigsaw' to match App.tsx
+    route: '/games/jigsaw'
   },
   {
     id: 'spin-wheel',
@@ -54,9 +60,8 @@ export const GAMES: Game[] = [
     estMinutes: 7,
     icon: 'Zap',
     isAvailable: false,
-    route: 'spin-wheel'
+    route: '/games/spin-wheel'
   },
-  
   {
     id: 'guess-article',
     title: 'Guess the Article',
@@ -66,7 +71,7 @@ export const GAMES: Game[] = [
     estMinutes: 5,
     icon: 'Lightbulb',
     isAvailable: false,
-    route: 'guess-article'
+    route: '/games/guess-article'
   }
 ];
 
