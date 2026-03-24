@@ -345,6 +345,44 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
   }, []);
 
 
+
+  // Resize Logic
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+
+      const newWidth = window.innerWidth - e.clientX - 24;
+      const newHeight = window.innerHeight - e.clientY - 24;
+
+      setWindowSize({
+        width: Math.max(300, Math.min(newWidth, 800)),
+        height: Math.max(400, Math.min(newHeight, 900)),
+      });
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+      document.body.style.cursor = 'default';
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isOpen]);
+
+  const startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    document.body.style.cursor = 'nwse-resize';
+  };
+
+  // voice input setup
   useEffect(() => {
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
@@ -392,42 +430,6 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
       recognition.onerror = null;
     };
   }, []);
-
-  // Resize Logic
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizingRef.current) return;
-
-      const newWidth = window.innerWidth - e.clientX - 24;
-      const newHeight = window.innerHeight - e.clientY - 24;
-
-      setWindowSize({
-        width: Math.max(300, Math.min(newWidth, 800)),
-        height: Math.max(400, Math.min(newHeight, 900)),
-      });
-    };
-
-    const handleMouseUp = () => {
-      isResizingRef.current = false;
-      document.body.style.cursor = 'default';
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isOpen]);
-
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizingRef.current = true;
-    document.body.style.cursor = 'nwse-resize';
-  };
 
   const handleVoiceInput = () => {
     const recognition = recognitionRef.current;
@@ -573,8 +575,8 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
         <div
           className="fixed bottom-6 right-6 z-50 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 flex flex-col overflow-hidden"
           style={{
-            width: `${windowSize.width}px`,
-            height: `${windowSize.height}px`,
+            width: window.innerWidth < 640 ? '90vw' : `${windowSize.width}px`,
+            height: window.innerWidth < 640 ? '70vh' : `${windowSize.height}px`,
             transition: isResizingRef.current ? 'none' : 'width 0.2s, height 0.2s'
           }}
         >
@@ -706,3 +708,7 @@ export const ChatbotFloating: React.FC<ChatbotFloatingProps> = ({ user }) => {
     </>
   );
 };
+
+
+
+

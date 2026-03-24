@@ -1227,7 +1227,7 @@ export const PartArticlesPage: React.FC = () => {
               {currentQuizQuestion && (
                 <>
                   <div className="mb-8">
-                    <h4 className="text-2xl font-bold text-white mb-6 flex items-start gap-3">
+                    <h4 className="text-lg sm:text-2xl font-bold text-white mb-6 flex items-start gap-3">
                       <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 text-sm">
                         {questionNumber}
                       </span>
@@ -1305,7 +1305,7 @@ export const PartArticlesPage: React.FC = () => {
                   : "Keep learning! Review the articles and try again. 📚"}
               </p>
 
-              <div className="max-w-3xl mx-auto mb-8 text-left space-y-4">
+              <div className="text-lg sm:text-2xl mx-auto mb-8 text-left space-y-4">
                 {quizHistory.map((historyItem: any, index: number) => {
                   const isCorrect = historyItem.result.isCorrect;
                   return (
