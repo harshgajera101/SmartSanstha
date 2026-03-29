@@ -398,41 +398,69 @@ function AppContent() {
 
 
   // Check user session on mount
+  // useEffect(() => {
+  //   const checkUserSession = async () => {
+  //     try {
+  //       const response = await fetch(`${API_URL}/user/me`, {
+  //         credentials: "include",
+  //       });
+
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setUser(data.profile);
+  //       } else if (response.status === 401) {
+  //         const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+  //           method: "POST",
+  //           credentials: "include",
+  //         });
+
+  //         if (refreshResponse.ok) {
+  //           const retryResponse = await fetch(`${API_URL}/user/me`, {
+  //             credentials: "include",
+  //           });
+
+  //           if (retryResponse.ok) {
+  //             const data = await retryResponse.json();
+  //             setUser(data.profile);
+  //           }
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Session check failed:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   checkUserSession();
+  // }, [API_URL]);
+
   useEffect(() => {
-    const checkUserSession = async () => {
-      try {
-        const response = await fetch(`${API_URL}/user/me`, {
-          credentials: "include",
-        });
+  const controller = new AbortController();
 
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.profile);
-        } else if (response.status === 401) {
-          const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
-            method: "POST",
-            credentials: "include",
-          });
+  const checkUserSession = async () => {
+    try {
+      const response = await fetch(`${API_URL}/user/me`, {
+        credentials: "include",
+        signal: controller.signal, // Connect the abort signal
+      });
 
-          if (refreshResponse.ok) {
-            const retryResponse = await fetch(`${API_URL}/user/me`, {
-              credentials: "include",
-            });
-
-            if (retryResponse.ok) {
-              const data = await retryResponse.json();
-              setUser(data.profile);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Session check failed:", error);
-      } finally {
-        setIsLoading(false);
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.profile);
+      } else {
+        setUser(null);
       }
-    };
-    checkUserSession();
-  }, [API_URL]);
+    } catch (err: any) {
+      if (err.name === 'AbortError') return; 
+      console.debug("Guest session active"); 
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  checkUserSession();
+  return () => controller.abort();
+}, [API_URL]);
 
   const handleLoginSuccess = (userData: UserData) => {
     setUser(userData);
