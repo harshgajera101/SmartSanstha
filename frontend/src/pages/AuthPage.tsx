@@ -443,7 +443,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase";
 
-import { User, Mail, KeyRound, Calendar, LogIn, UserPlus, Eye, EyeOff, Shield } from 'lucide-react';
+import { User, Mail, KeyRound, Calendar, LogIn, UserPlus, Eye, EyeOff, Shield , ArrowLeft} from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -706,7 +706,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   );
 
   return (
+
     <div className="w-full max-w-md my-8">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span>Back</span>
+        </button>
+      </div>
+
       <Card>
         <div className="text-center mb-6">
           <div className="inline-flex w-16 h-16 items-center justify-center bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl mb-4">
