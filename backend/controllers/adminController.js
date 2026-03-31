@@ -141,16 +141,19 @@ export const deleteAdmin = async (req, res) => {
 /**
  * Get Admin Dashboard Statistics
  */
+/**
+ * Get Admin Dashboard Statistics
+ */
 export const getAdminStats = async (req, res) => {
   try {
-    // 1. Total Users
+    // 1. Total Users count
     const totalUsers = await User.countDocuments();
 
-    // 2. Total Articles (🔥 ADD HERE)
+    // 2. Total Articles from the manual collection reference
     const articlesCollection = getArticlesCollection();
     const totalArticles = await articlesCollection.countDocuments();
 
-    // 3. User Category Distribution
+    // 3. User Category Distribution aggregation
     const categoryDistribution = await User.aggregate([
       {
         $group: {
@@ -166,11 +169,7 @@ export const getAdminStats = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10);
 
-    // 5. User Signups Over Time (Last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    // 6. Total Quiz Attempts (SUM of all users)
+    // 5. Total Quiz Attempts (Summed from all user stat documents)
     const quizAgg = await UserStats.aggregate([
       {
         $group: {
@@ -179,30 +178,48 @@ export const getAdminStats = async (req, res) => {
         },
       },
     ]);
-
     const totalQuizAttempts = quizAgg[0]?.totalAttempts || 0;
 
+    // 6. Signups Over Time (Last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const signupsOverTime = await User.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: thirtyDaysAgo }
-        }
-      },
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
       {
         $group: {
-          _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
-          },
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
           count: { $sum: 1 }
         }
       },
-      {
-        $sort: { _id: 1 }
-      }
+      { $sort: { _id: 1 } }
     ]);
 
-    // 6. Total Admins
+    // 7. Total Admins count
     const totalAdmins = await Admin.countDocuments();
+
+    // ✅ 8. DYNAMIC TOP ARTICLES (Replacing the previous hardcoded list)
+    // This aggregates "recentlyRead" across all users to find the top 5 most popular articles
+    const topArticles = await UserArticleProgress.aggregate([
+      { $unwind: "$recentlyRead" },
+      {
+        $group: {
+          _id: "$recentlyRead.articleNumber",
+          viewCount: { $sum: 1 },
+          partName: { $first: "$recentlyRead.partName" }
+        }
+      },
+      { $sort: { viewCount: -1 } },
+      { $limit: 5 },
+      { 
+        $project: { 
+          articleNumber: "$_id", 
+          viewCount: 1, 
+          partName: 1, 
+          _id: 0 
+        } 
+      }
+    ]);
 
     return res.json({
       success: true,
@@ -214,6 +231,7 @@ export const getAdminStats = async (req, res) => {
         categoryDistribution,
         recentSignups,
         signupsOverTime,
+        topArticles, // Sent to frontend AdminDashboard.tsx
       }
     });
   } catch (err) {

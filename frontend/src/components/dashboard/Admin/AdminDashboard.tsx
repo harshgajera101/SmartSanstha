@@ -324,6 +324,11 @@ interface ApiDashboardStats {
     createdAt: string;
   }[];
   signupsOverTime: { _id: string; count: number }[];
+  topArticles: {
+    articleNumber: string;
+    viewCount: number;
+    partName?: string
+  }[];
 }
 
 /* ---------------- UI STATS TYPE ---------------- */
@@ -353,6 +358,7 @@ interface UIDashboardStats {
   topArticles: {
     title: string;
     views: number;
+    partName?: string;
   }[];
   quizPerformance: {
     averageScore: number;
@@ -368,7 +374,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin }) => {
   const navigate = useNavigate();
 
   const API_URL =
-  import.meta.env.VITE_API_BASE_URL || "/api";
+    import.meta.env.VITE_API_BASE_URL || "/api";
 
 
   /* ---------------- HELPERS ---------------- */
@@ -424,13 +430,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin }) => {
         count: day.count,
       })),
 
-      topArticles: [
-        { title: 'Article 21 - Right to Life', views: 1523 },
-        { title: 'Article 19 - Freedom of Speech', views: 1342 },
-        { title: 'Article 14 - Right to Equality', views: 1198 },
-        { title: 'Article 32 - Constitutional Remedies', views: 987 },
-        { title: 'Preamble', views: 856 },
-      ],
+      topArticles: (api.topArticles || []).map(art => ({
+        title: `Article ${art.articleNumber}`,
+        views: art.viewCount,
+        partName: art.partName
+      })),
 
       quizPerformance: {
         averageScore: 78,
@@ -653,21 +657,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin }) => {
             </div>
             <h2 className="text-xl font-bold text-white">Most Viewed Articles</h2>
           </div>
+          {/* Inside the Top Articles Card */}
           <div className="space-y-3">
             {stats.topArticles.map((article, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors"
               >
-                <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                     {index + 1}
                   </div>
-                  <p className="text-white font-medium">{article.title}</p>
+                  <div className="truncate">
+                    <p className="text-white font-medium truncate">{article.title}</p>
+                    {article.partName && (
+                      <p className="text-slate-500 text-xs truncate">{article.partName}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 ml-2">
-                  <span className="text-slate-400 text-sm">{article.views.toLocaleString()}</span>
-                  <span className="text-slate-500 text-xs">views</span>
+                <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                  <span className="text-orange-400 font-bold text-sm">{article.views.toLocaleString()} Views</span>
                 </div>
               </div>
             ))}
