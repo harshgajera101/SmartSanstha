@@ -526,6 +526,8 @@ import {
   XCircle,
   Monitor,
   Smartphone,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { Card } from "../components/common/Card";
 import { Button } from "../components/common/Button";
@@ -565,9 +567,48 @@ export const CourtSimulationPage: React.FC = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const sceneRef = useRef<any>(null);
 
+
+  // Text-to-Speech State
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const speakText = (text: string) => {
+    if (!window.speechSynthesis) return;
+
+    // Stop previous speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;      // speed
+    utterance.pitch = 1;     // tone
+    utterance.volume = 1;    // volume
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeech = () => {
+  window.speechSynthesis.cancel();
+  setIsSpeaking(false);
+};
+
+  useEffect(() => {
+    if (gameState === "roleplay" && selectedScenario) {
+      const line =
+        selectedScenario.roleplay[currentDialogueIndex]?.line;
+
+      if (line) speakText(line);
+    }
+  }, [currentDialogueIndex, gameState]);
+
+
   useEffect(() => {
     fetchScenarios();
   }, []);
+
 
   const fetchScenarios = async () => {
     try {
@@ -834,13 +875,32 @@ export const CourtSimulationPage: React.FC = () => {
                     selectedScenario.roleplay[currentDialogueIndex].speaker
                   )}
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-white capitalize text-sm mb-1">
-                    {selectedScenario.roleplay[currentDialogueIndex].speaker}
-                  </h4>
-                  <p className="text-slate-200 text-sm leading-relaxed">
-                    "{selectedScenario.roleplay[currentDialogueIndex].line}"
-                  </p>
+                <div className="flex-1 flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold text-white capitalize text-sm mb-1">
+                      {selectedScenario.roleplay[currentDialogueIndex].speaker}
+                    </h4>
+                    <p className="text-slate-200 text-sm leading-relaxed">
+                      "{selectedScenario.roleplay[currentDialogueIndex].line}"
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      isSpeaking
+                        ? stopSpeech()
+                        : speakText(
+                          selectedScenario.roleplay[currentDialogueIndex].line
+                        )
+                    }
+                    className="ml-3 p-2 bg-slate-700 rounded-lg hover:bg-slate-600"
+                  >
+                    {isSpeaking ? (
+                      <VolumeX className="w-4 h-4 text-red-400" />
+                    ) : (
+                      <Volume2 className="w-4 h-4 text-green-400" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
