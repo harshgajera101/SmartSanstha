@@ -381,28 +381,6 @@ const normalizeArticleId = (raw: string): string => {
   return match ? match[1] : str;
 };
 
-type ActivityType = "game" | "article" | "quiz";
-
-interface RecentActivityItem {
-  id: number;
-  type: ActivityType;
-  title: string;
-  articleNumber?: string;
-  partName?: string;
-  score?: number;
-  progress?: number;
-  date: string;
-}
-
-const weeklyProgress = [
-  { day: "Mon", value: 65 },
-  { day: "Tue", value: 80 },
-  { day: "Wed", value: 45 },
-  { day: "Thu", value: 90 },
-  { day: "Fri", value: 75 },
-  { day: "Sat", value: 60 },
-  { day: "Sun", value: 85 },
-];
 
 export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const navigate = useNavigate();
@@ -510,7 +488,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             {user.name.charAt(0)}
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">{user.name}</h1>
+            <h1 className="text-3xl font-bold text-white mb-1">Welcome back, {user.name}! 👋</h1>
             <p className="text-slate-400 text-sm">
               <span className="text-orange-400 font-medium">{user.email}</span>
               <span className="text-slate-500"> • {user.category.toUpperCase().replace('_', ' ')}</span>
