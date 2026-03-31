@@ -274,7 +274,7 @@ export const getUserDetailedStats = async (req, res) => {
       data: {
         user,
         stats,
-        lastArticles: progressDoc?.recentlyRead?.slice(0, 3) || [],
+        lastArticles: progressDoc?.recentlyRead || [],
         bookmarks: progressDoc?.bookmarks || [],
         perPart
       }

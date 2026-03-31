@@ -331,8 +331,6 @@
 
 
 
-
-
 // frontend/src/components/dashboard/Dashboard.tsx
 
 import React, { useEffect, useState } from "react";
@@ -342,11 +340,10 @@ import {
   Trophy,
   Target,
   TrendingUp,
-  Flame,
   BookOpen,
+  CheckCircle,
 } from "lucide-react";
-import { Card } from "../common/Card";
-import { ProgressBar } from "../common/ProgressBar";
+import { LearnProgress } from "./LearnProgress";
 import { UserProgress } from "./UserProgress";
 import { ScoreCard } from "./ScoreCard";
 import { Bookmarks } from "./Bookmarks";
@@ -415,7 +412,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [trends, setTrends] = useState({
     totalScore: "+0",
     gamesPlayed: "+0",
-    currentStreak: "+0",
+    quizzesTaken: "+0",
     articlesRead: "+0",
   });
 
@@ -426,7 +423,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     const loadDashboard = async () => {
       try {
         setLoading(true);
-
         const res: any = await progressAPI.getDashboard();
         if (!res?.success || cancelled) return;
 
@@ -447,37 +443,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           perPart: perPart || [],
         };
 
+        // Trend calculation logic
         const key = `dashboard_prev_${user.id}`;
         const prevRaw = localStorage.getItem(key);
-
-        const prev = prevRaw
-          ? JSON.parse(prevRaw)
-          : {
-            totalScore: newState.totalScore,
-            gamesPlayed: newState.gamesPlayed,
-            currentStreak: newState.currentStreak,
-            articlesRead: newState.articlesRead,
-          };
-
+        const prev = prevRaw ? JSON.parse(prevRaw) : newState;
         const formatTrend = (diff: number) => (diff >= 0 ? `+${diff}` : `${diff}`);
 
         setTrends({
           totalScore: formatTrend(newState.totalScore - (prev.totalScore ?? 0)),
           gamesPlayed: formatTrend(newState.gamesPlayed - (prev.gamesPlayed ?? 0)),
-          currentStreak: formatTrend(newState.currentStreak - (prev.currentStreak ?? 0)),
+          quizzesTaken: formatTrend(newState.quizzesTaken - (prev.quizzesTaken ?? 0)),
           articlesRead: formatTrend(newState.articlesRead - (prev.articlesRead ?? 0)),
         });
 
-        localStorage.setItem(
-          key,
-          JSON.stringify({
-            totalScore: newState.totalScore,
-            gamesPlayed: newState.gamesPlayed,
-            currentStreak: newState.currentStreak,
-            articlesRead: newState.articlesRead,
-          })
-        );
-
+        localStorage.setItem(key, JSON.stringify(newState));
         setData(newState);
       } catch (err) {
         console.error("Failed to load dashboard data", err);
@@ -487,48 +466,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     };
 
     loadDashboard();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [user]);
 
   if (!user || loading || !data) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-orange-500"></div>
       </div>
     );
   }
 
   const avatar = user.name.split(" ").map((n) => n[0]).join("");
 
-  const recentActivity: RecentActivityItem[] = data.lastArticles
-    .slice(0, 3)
-    .map((a, index): RecentActivityItem => ({
-      id: index + 1,
-      type: "article",
-      articleNumber: a.articleNumber,
-      partName: a.partName,
-      title: `Article ${a.articleNumber}`,
-      progress: 100,
-      date: new Date().toISOString().slice(0, 10),
-    }));
-
-  const sortedPerPart = [...data.perPart]
-    .filter((p) => p.totalInPart > 0)
-    .sort((a, b) => {
-      const pa = a.readCount / a.totalInPart;
-      const pb = b.readCount / b.totalInPart;
-      if (pa === 1 && pb !== 1) return 1;
-      if (pa !== 1 && pb === 1) return -1;
-      return pb - pa;
-    })
-    .slice(0, 3);
+  const recentReadingData = data.lastArticles.map((a, index) => ({
+    id: index + 1,
+    title: `Article ${a.articleNumber}`,
+    articleNumber: a.articleNumber,
+    partName: a.partName,
+    date: "Recently", // Or use a timestamp if available
+  }));
 
   return (
     <div className="w-full max-w-7xl animate-fade-in mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-6">
+      {/* Welcome Header */}
+      {/* <div className="mb-8 flex items-center gap-6">
         <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl">
           {avatar}
         </div>
@@ -540,104 +502,59 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             Track your constitutional learning journey
           </p>
         </div>
+      </div> */}
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 mb-8 shadow-xl">
+        <div className="flex items-center gap-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl">
+            {user.name.charAt(0)}
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-1">{user.name}</h1>
+            <p className="text-slate-400 text-sm">
+              <span className="text-orange-400 font-medium">{user.email}</span>
+              <span className="text-slate-500"> • {user.category.toUpperCase().replace('_', ' ')}</span>
+
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <ScoreCard
-          icon={Trophy}
-          label="Total Score"
-          value={data.totalScore}
-          gradient="from-yellow-500 to-orange-500"
-          trend={trends.totalScore}
-        />
-        <ScoreCard
-          icon={Flame}
-          label="Streak"
-          value={`${data.currentStreak} days`}
-          gradient="from-red-500 to-pink-500"
-          trend={trends.currentStreak}
-        />
-        <ScoreCard
-          icon={Target}
-          label="Games"
-          value={data.gamesPlayed}
-          gradient="from-blue-500 to-cyan-500"
-          trend={trends.gamesPlayed}
-        />
-        <ScoreCard
-          icon={BookOpen}
-          label="Articles"
-          value={data.articlesRead}
-          gradient="from-purple-500 to-pink-500"
-          trend={trends.articlesRead}
-        />
-      </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Column */}
-        <div className="lg:col-span-2 space-y-8">
-          <Card>
-            <div className="flex items-center gap-3 mb-6">
-              <TrendingUp className="w-6 h-6 text-orange-400" />
-              <h2 className="text-2xl font-bold text-white">Learning Progress</h2>
-            </div>
-
-            <div className="space-y-6">
-              {sortedPerPart.map((part) => (
-                <div key={part.partName}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-slate-300 font-semibold">{part.partName}</span>
-                    <span className="text-slate-400 text-sm">
-                      {part.readCount}/{part.totalInPart}
-                    </span>
-                  </div>
-                  <ProgressBar value={part.readCount} max={part.totalInPart || 1} color="primary" />
+      <div className="grid lg:grid-cols-3 gap-8 items-stretch">
+              {/* Left Column: Stats + Progress */}
+              <div className="lg:col-span-2 flex flex-col">
+                {/* Combined Stats Grid for better density */}
+                <div className="grid grid-cols-2 gap-8 mb-6">
+                  <ScoreCard icon={Trophy} label="Total Score" value={data.totalScore} gradient="from-yellow-500 to-orange-500" />
+                  <ScoreCard icon={CheckCircle} label="Quizzes" value={`${data.quizzesTaken} Taken`} gradient="from-green-500 to-emerald-600" />
+                  <ScoreCard icon={Target} label="Games" value={data.gamesPlayed} gradient="from-blue-500 to-cyan-500" />
+                  <ScoreCard icon={BookOpen} label="Articles" value={data.articlesRead} gradient="from-purple-500 to-pink-500" />
                 </div>
-              ))}
-
-              <div>
-                <div className="flex justify-between items-center mb-2 pt-4 border-t border-slate-700/50">
-                  <span className="text-slate-300 font-semibold">Overall Completion</span>
-                  <span className="text-slate-400 text-sm">{data.articlesRead}/466</span>
+      
+                {/* flex-grow ensures LearnProgress fills the height to match the sidebar */}
+                <div className="flex-grow">
+                  <LearnProgress
+                    perPart={data.perPart}
+                    articlesRead={data.articlesRead}
+                    totalArticles={466}
+                  />
                 </div>
-                <ProgressBar value={data.articlesRead} max={466} color="success" />
+      
+                {/* Performance Graph (if uncommented later) will sit nicely below */}
+                {/* <div className="mt-8">
+            <PerformanceGraph totalScore={data.stats.totalScore} gameScore={data.stats.gameScore} />
+          </div> */}
+              </div>
+      
+              {/* Right Column: Sidebar */}
+              <div className="flex flex-col space-y-8">
+                  <Bookmarks bookmarks={data.bookmarks} />
+                  <RecentReading activities={recentReadingData} />
               </div>
             </div>
-          </Card>
 
-          <Card>
-            <div className="flex items-center gap-3 mb-6">
-              <BarChart3 className="w-6 h-6 text-orange-400" />
-              <h2 className="text-2xl font-bold text-white">Weekly Activity</h2>
-            </div>
-
-            <div className="flex items-end justify-between gap-2 h-48 px-2">
-              {weeklyProgress.map((day, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full bg-slate-800 rounded-t-lg h-40 flex items-end overflow-hidden">
-                    <div
-                      className="w-full bg-gradient-to-t from-orange-600 to-orange-400 transition-all duration-700 ease-out"
-                      style={{ height: `${day.value}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                    {day.day}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-8">
-          <Bookmarks bookmarks={data.bookmarks} />
-
-          <RecentReading activities={recentActivity} />
-        </div>
-      </div>
-
+      {/* Footer Goals Section */}
       <div className="mt-8">
         <UserProgress
           user={user}
