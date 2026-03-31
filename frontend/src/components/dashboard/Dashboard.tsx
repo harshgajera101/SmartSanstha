@@ -527,9 +527,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 {/* Combined Stats Grid for better density */}
                 <div className="grid grid-cols-2 gap-8 mb-6">
                   <ScoreCard icon={Trophy} label="Total Score" value={data.totalScore} gradient="from-yellow-500 to-orange-500" />
-                  <ScoreCard icon={CheckCircle} label="Quizzes" value={`${data.quizzesTaken} Taken`} gradient="from-green-500 to-emerald-600" />
-                  <ScoreCard icon={Target} label="Games" value={data.gamesPlayed} gradient="from-blue-500 to-cyan-500" />
-                  <ScoreCard icon={BookOpen} label="Articles" value={data.articlesRead} gradient="from-purple-500 to-pink-500" />
+                  <ScoreCard icon={CheckCircle} label="Quizzes Taken" value={`${data.quizzesTaken}`} gradient="from-green-500 to-emerald-600" />
+                  <ScoreCard icon={Target} label="Games Played" value={data.gamesPlayed} gradient="from-blue-500 to-cyan-500" />
+                  <ScoreCard icon={BookOpen} label="Articles Read" value={data.articlesRead} gradient="from-purple-500 to-pink-500" />
                 </div>
       
                 {/* flex-grow ensures LearnProgress fills the height to match the sidebar */}
