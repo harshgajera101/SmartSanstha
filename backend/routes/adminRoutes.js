@@ -4,6 +4,7 @@ import * as adminController from '../controllers/adminController.js';
 import { verifyAccessToken } from '../middleware/authMiddleware.js';
 import { allowRoles } from '../middleware/roleMiddleware.js';
 
+
 const router = express.Router();
 
 // All routes below require a valid access token from a user with the 'admin' type.
@@ -12,9 +13,12 @@ router.use(verifyAccessToken, allowRoles('admin'));
 // --- User Management Routes ---
 router.get('/users', adminController.getAllUsers);
 router.get('/users/:id', adminController.getUserById);
+router.get('/users/:id/stats', adminController.getUserDetailedStats);
 router.post('/users', adminController.createUserAsAdmin);
 router.put('/users/:id', adminController.updateUserByAdmin);
 router.delete('/users/:id', adminController.deleteUserByAdmin);
+
+
 
 // --- Admin Management Routes ---
 // The superadmin check has been removed. Any admin can now access these endpoints.

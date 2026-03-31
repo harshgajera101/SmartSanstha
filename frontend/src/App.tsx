@@ -329,8 +329,10 @@ import { CourtSimulationPage } from "./pages/CourtSimulationPage";
 import { GamesPage } from "./pages/GamesPage";
 import { AuthPage } from "./pages/AuthPage";
 import { AdminLoginPage } from "./pages/AdminLoginPage";
-import { AdminDashboard } from "./components/dashboard/AdminDashboard";
+import { AdminDashboard } from "./components/dashboard/Admin/AdminDashboard";
 import { auth } from "./firebase";
+
+import { UserDetailView } from './components/dashboard/Admin/UserDetailView';
 
 export interface UserData {
   id: string;
@@ -435,32 +437,32 @@ function AppContent() {
   // }, [API_URL]);
 
   useEffect(() => {
-  const controller = new AbortController();
+    const controller = new AbortController();
 
-  const checkUserSession = async () => {
-    try {
-      const response = await fetch(`${API_URL}/user/me`, {
-        credentials: "include",
-        signal: controller.signal, // Connect the abort signal
-      });
+    const checkUserSession = async () => {
+      try {
+        const response = await fetch(`${API_URL}/user/me`, {
+          credentials: "include",
+          signal: controller.signal, // Connect the abort signal
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.profile);
-      } else {
-        setUser(null);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.profile);
+        } else {
+          setUser(null);
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        console.debug("Guest session active");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      if (err.name === 'AbortError') return; 
-      console.debug("Guest session active"); 
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  checkUserSession();
-  return () => controller.abort();
-}, [API_URL]);
+    };
+
+    checkUserSession();
+    return () => controller.abort();
+  }, [API_URL]);
 
   const handleLoginSuccess = (userData: UserData) => {
     setUser(userData);
@@ -619,6 +621,19 @@ function AppContent() {
                         <AdminDashboard admin={user} />
                       ) : (
                         <Dashboard user={user!} />
+                      )}
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin/users/:userId"
+                  element={
+                    <ProtectedRoute user={user}>
+                      {user?.type === "admin" ? (
+                        <UserDetailView />
+                      ) : (
+                        <Navigate to="/" replace />
                       )}
                     </ProtectedRoute>
                   }

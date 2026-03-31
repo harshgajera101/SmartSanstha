@@ -297,7 +297,8 @@ import {
   Brain,
   Activity
 } from 'lucide-react';
-import { Card } from '../common/Card';
+import { Card } from '../../common/Card';
+import { useNavigate } from "react-router-dom";
 
 interface AdminData {
   name: string;
@@ -364,6 +365,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin }) => {
   const [stats, setStats] = useState<UIDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const API_URL =
   import.meta.env.VITE_API_BASE_URL || "/api";
@@ -619,6 +621,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin }) => {
             {stats.recentSignups.map((user) => (
               <div
                 key={user.id}
+                onClick={() => navigate(`/admin/users/${user.id}`)}
                 className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">

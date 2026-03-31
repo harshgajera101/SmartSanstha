@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import getCategoryFromDOB from '../utils/categorize.js';
 import { getArticlesCollection } from '../config/database.js';
 import UserStats from '../models/UserStats.js';
+import UserArticleProgress from '../models/UserArticleProgress.js';
 
 
 
@@ -221,5 +222,65 @@ export const getAdminStats = async (req, res) => {
       success: false,
       message: 'Server error fetching statistics'
     });
+  }
+};
+
+export const getUserDetailedStats = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Fetch User Profile
+    const user = await User.findById(id).select('-password').lean();
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    // 2. Fetch User Stats (Score, streak, quizzes) from the UserStats collection
+    // Note: Based on your document, the field is named "user" (Object ID)
+    const stats = await UserStats.findOne({ user: id }) || {
+      totalScore: 0,
+      articleScore: 0,
+      gameScore: 0,
+      articlesRead: 0,
+      gamesPlayed: 0,
+      quizzesTaken: 0,
+      currentStreak: 0,
+      createdAt: user.createdAt,
+      lastActive: null
+    };
+
+    // 3. Fetch Progress Document for Per-Part calculation
+    const progressDoc = await UserArticleProgress.findOne({ user: id }).lean();
+    
+    const completed = progressDoc?.completedArticles || [];
+    const partMap = {};
+    completed.forEach((a) => {
+      if (!a.partName) return;
+      partMap[a.partName] = (partMap[a.partName] || 0) + 1;
+    });
+
+    // Totals mapping for Progress Bars
+    const PART_TOTALS = {
+      "Preamble": 1, "Part I": 4, "Part II": 7, "Part III": 30, "Part IV": 19,
+      "Part V": 102, "Part VI": 87, "Part XI": 20, "Part XII": 38
+    };
+
+    const perPart = Object.keys(partMap).map((part) => ({
+      partName: part,
+      readCount: partMap[part],
+      totalInPart: PART_TOTALS[part] || 20,
+    }));
+
+    return res.json({
+      success: true,
+      data: {
+        user,
+        stats,
+        lastArticles: progressDoc?.recentlyRead?.slice(0, 3) || [],
+        bookmarks: progressDoc?.bookmarks || [],
+        perPart
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
