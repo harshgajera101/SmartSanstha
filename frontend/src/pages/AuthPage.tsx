@@ -582,8 +582,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         return 'Too many failed login attempts. Please try again later.';
       case 'auth/email-already-in-use':
         return 'This email is already registered. Please log in instead.';
-      case 'auth/weak-password':
-        return 'Password is too weak. Use at least 6 characters.';
+      case 'auth/password-does-not-meet-requirements':
+        return 'Password must be at least 8 characters and include uppercase, lowercase, and a number.';
       case 'auth/invalid-email':
         return 'Invalid email format. Please enter a valid email.';
       case 'auth/network-request-failed':
