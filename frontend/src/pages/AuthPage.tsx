@@ -437,13 +437,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   updateProfile,
   sendEmailVerification,
   AuthError
 } from "firebase/auth";
 import { auth } from "../firebase";
 
-import { User, Mail, KeyRound, Calendar, LogIn, UserPlus, Eye, EyeOff, Shield , ArrowLeft} from 'lucide-react';
+import { User, Mail, KeyRound, Calendar, LogIn, UserPlus, Eye, EyeOff, Shield, ArrowLeft } from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -518,6 +519,34 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+
+
+  // Reset password view state
+  const [isResetView, setIsResetView] = useState(false);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Please enter your email address first.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setSuccess("Password reset link sent! Check your inbox.");
+      // Return to login view after a few seconds
+      setTimeout(() => setIsResetView(false), 5000);
+    } catch (err: any) {
+      const errorMessage = getFirebaseErrorMessage(err as AuthError);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const API_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -739,30 +768,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
           </div>
         )}
 
-        <form onSubmit={isLoginView ? handleLogin : handleRegister} className="space-y-4">
-          {!isLoginView && (
-            <>
-              <InputField
-                icon={<User className="w-5 h-5" />}
-                type="text"
-                placeholder="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoComplete="name"
-              />
-              <InputField
-                icon={<Calendar className="w-5 h-5" />}
-                type="date"
-                max={maxDate}
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                required
-                title="You must be at least 12 years old"
-              />
-            </>
-          )}
-
+        {/* Replace your existing form logic with this conditional structure */}
+        <form
+          onSubmit={isResetView ? handleForgotPassword : (isLoginView ? handleLogin : handleRegister)}
+          className="space-y-4"
+        >
           <InputField
             icon={<Mail className="w-5 h-5" />}
             type="email"
@@ -770,68 +780,75 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            autoComplete="email"
           />
 
-          <div className="relative">
-            <InputField
-              icon={<KeyRound className="w-5 h-5" />}
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              autoComplete={isLoginView ? "current-password" : "new-password"}
-            />
-            <PasswordToggle />
-          </div>
+          {!isResetView && (
+            <>
+              {/* Name and DOB only for Sign Up */}
+              {!isLoginView && (
+                <>
+                  <InputField icon={<User className="w-5 h-5" />} placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
+                  <InputField icon={<Calendar className="w-5 h-5" />} type="date" value={dob} onChange={(e) => setDob(e.target.value)} required />
+                </>
+              )}
 
-          {!isLoginView && (
-            <div className="relative">
-              <InputField
-                icon={<KeyRound className="w-5 h-5" />}
-                type={showPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                autoComplete="new-password"
-              />
-            </div>
+              {/* Password field for both Login and Sign Up */}
+              <div className="relative">
+                <InputField
+                  icon={<KeyRound className="w-5 h-5" />}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <PasswordToggle />
+              </div>
+
+              {/* Forgot Password Link - Only visible in Login mode */}
+              {isLoginView && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setIsResetView(true)}
+                    className="text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
+
+              {/* Confirm Password only for Sign Up */}
+              {!isLoginView && (
+                <InputField
+                  icon={<KeyRound className="w-5 h-5" />}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              )}
+            </>
           )}
 
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            </div>
-          )}
+          {error && <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm text-center">{error}</div>}
+          {success && <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-green-400 text-sm text-center">{success}</div>}
 
-          {success && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-              <p className="text-green-400 text-sm text-center">{success}</p>
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            icon={isLoginView ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
-          >
-            {isLoading ? "Processing..." : isLoginView ? "Sign In" : "Sign Up"}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Processing..." : isResetView ? "Send Reset Link" : isLoginView ? "Sign In" : "Sign Up"}
           </Button>
         </form>
 
         <div className="text-center mt-6">
           <button
-            onClick={toggleView}
+            onClick={() => {
+              if (isResetView) setIsResetView(false);
+              else toggleView();
+            }}
             className="text-sm text-slate-400 hover:text-orange-400 transition-colors"
-            disabled={isLoading}
           >
-            {isLoginView
-              ? "Don't have an account? Sign Up"
-              : "Already have an account? Sign In"}
+            {isResetView ? "Back to Login" : isLoginView ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
           </button>
         </div>
 
